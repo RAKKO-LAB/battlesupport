@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>重ねて！ダメージ計算 - RAKKO-LAB</title>
+<meta name="description" content="対戦ゲーム中、画面に重ねてダメージ計算と対戦記録ができるAndroid向け対戦支援ツール。">
+<style>
+  :root { --green: #2D5F3F; --accent: #E8F0EA; --text: #2A2A2A; --sub: #888; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
+         max-width: 720px; margin: 0 auto; padding: 32px 24px; line-height: 1.8;
+         color: var(--text); background: #fff; }
+  header { text-align: center; padding: 24px 0 8px; }
+  .sub { color: var(--sub); font-size: 0.9em; letter-spacing: 0.05em; }
+  h1 { color: var(--green); font-size: 1.8em; margin: 8px 0 4px; }
+  .badge { display: inline-block; background: var(--accent); color: var(--green);
+           font-size: 0.85em; font-weight: bold; padding: 6px 14px;
+           border-radius: 12px; margin-top: 12px; }
+  h2 { color: var(--green); font-size: 1.15em; margin-top: 2em;
+       border-bottom: 1px solid var(--accent); padding-bottom: 6px; }
+  ul { padding-left: 1.3em; }
+  a { color: var(--green); }
+  .links a { display: inline-block; margin-right: 16px; }
+  footer { color: var(--sub); font-size: 0.85em; text-align: center; margin-top: 3em; }
+</style>
+</head>
+<body>
+<header>
+  <div class="sub">RAKKO-LAB</div>
+  <h1>重ねて！ダメージ計算</h1>
+  <div class="sub">対戦ゲーム向け 対戦支援ツール（Android）</div>
+  <div class="badge">クローズドテスト中</div>
+</header>
+
+<h2>概要</h2>
+<p>対戦ゲームをプレイしながら、画面の上に重ねてダメージ計算と対戦記録ができる対戦支援ツールです。アプリを切り替えることなく、プレイ画面のまま素早く計算・記録できます。</p>
+<p>本アプリは特定のゲームの公式アプリではありません。</p>
+
+<h2>主な機能（順次実装予定）</h2>
+<ul>
+  <li>画面に重ねて使えるフローティング表示</li>
+  <li>タイプ相性や能力値をふまえたダメージ計算</li>
+  <li>勝敗・選出・メモを残せる対戦記録</li>
+  <li>データはすべて端末内に保存（個人情報は収集しません）</li>
+</ul>
+
+<h2>リンク</h2>
+<p class="links">
+  <a href="./privacy/">プライバシーポリシー</a>
+  <a href="https://x.com/rakkolab" target="_blank" rel="noopener">X (@rakkolab)</a>
+</p>
+
+<footer>© RAKKO-LAB</footer>
+</body>
+</html>
