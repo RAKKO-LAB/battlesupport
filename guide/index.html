@@ -47,6 +47,10 @@
          font-family:"Noto Sans JP", system-ui, -apple-system, sans-serif;
          font-size:15px; line-height:1.85; -webkit-font-smoothing:antialiased; }
   h1,h2,h3 { font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif; text-wrap:balance; margin:0; }
+  /* 日本語は単語区切りが無いので、既定では語の途中でも折れる。auto-phrase は文節の切れ目を
+     選んでくれる（Chrome 119+ / Android Chrome）。非対応ブラウザは今までどおり折り返すだけで、
+     壊れない。固定の <br> で見た目を作ると狭い画面で必ず破綻するので、そちらは使わない。 */
+  h1, h2, h3, p, .path span, .hs-note p, details.deep .inner p { word-break:auto-phrase; }
   .mono { font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; }
   a { color:var(--green); }
   :focus-visible { outline:2px solid var(--amber-solid); outline-offset:3px; border-radius:3px; }
@@ -90,7 +94,6 @@
   /* 08 の2枚は 00 の3枚より一文が長い。同じ最小幅だと「残り〇回」のような短い語句が
      途中で折れて読みにくくなるので、広めに取り、強調語だけ折り返しを禁じる。 */
   .paths.pair { grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
-  .paths.pair span b { white-space:nowrap; }
 
   section { scroll-margin-top:24px; }
   .sec-head { display:flex; align-items:baseline; gap:12px; margin-bottom:6px; }
@@ -232,7 +235,7 @@
 
     <!-- ============ 00 ============ -->
     <section class="lede" id="s0">
-      <h1>ポケモンチャンピオンズの画面に<br>重ねて使うダメージ計算アプリです</h1>
+      <h1>ポケモンチャンピオンズの画面に重ねて使う<wbr>ダメージ計算アプリです</h1>
       <p>
         対戦中、アプリを切り替えずにダメージ計算・選出分析・対戦記録ができます。
         ここでは、インストールしてから実際に使えるようになるまでを順番に説明します。
@@ -565,11 +568,11 @@
       <div class="paths pair" style="margin-top:18px; margin-bottom:24px;">
         <div class="path">
           <b>ときどき広告のお願いが出ます</b>
-          <span>ダメージ計算を何回か使うと出ます。<b>「後で見る」</b>で先送りできます。続けて先送りできる回数には上限があります。<br>数えておく必要はありません。</span>
+          <span>ダメージ計算を何回か使うと出ます。<b>「後で見る」</b>で先送りできます。続けて先送りできる回数には上限があります。数えておく必要はありません。</span>
         </div>
         <div class="path">
           <b>3つの機能は「残り回数」を使います</b>
-          <span>構築サーチ・選出分析・上位構築の呼び出し。<br>画面に <b>残り〇回</b> と出ます。広告を1本見ると <b>+3回</b></span>
+          <span>構築サーチ・選出分析・上位構築の呼び出し。画面に <b>残り〇回</b> と出ます。広告を1本見ると <b>+3回</b></span>
         </div>
       </div>
       <div class="panel" data-deck>
