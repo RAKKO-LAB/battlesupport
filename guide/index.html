@@ -94,6 +94,9 @@
   /* 08 の2枚は 00 の3枚より一文が長い。同じ最小幅だと「残り〇回」のような短い語句が
      途中で折れて読みにくくなるので、広めに取り、強調語だけ折り返しを禁じる。 */
   .paths.pair { grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
+  /* 短い句だけ折り返しを禁じる。長い文に nowrap を掛けると狭い画面ではみ出すので、
+     対象は「途中で切れると意味が読めなくなる」数語に限る。 */
+  .nb { white-space:nowrap; }
 
   section { scroll-margin-top:24px; }
   .sec-head { display:flex; align-items:baseline; gap:12px; margin-bottom:6px; }
@@ -243,7 +246,7 @@
       </p>
       <figure class="hero">
         <video src="media/c3_overlay.webm" autoplay muted loop playsinline poster="media/poster_overlay.jpg"></video>
-        <figcaption>ゲームを閉じずに、パネルがそのまま上に乗ります。</figcaption>
+        <figcaption>ゲームを閉じずに、パネルが透過されて表示されます</figcaption>
       </figure>
       <div class="paths">
         <div class="path"><b>① 重ねて撮る</b><span>同じ端末で遊んでいるとき。画面をそのまま読み取ります。このガイドの中心です。</span></div>
@@ -572,7 +575,7 @@
         </div>
         <div class="path">
           <b>3つの機能は「残り回数」を使います</b>
-          <span>構築サーチ・選出分析・上位構築の呼び出し。画面に <b>残り〇回</b> と出ます。広告を1本見ると <b>+3回</b></span>
+          <span>構築サーチ・選出分析・上位構築の呼び出し。画面に <b>残り〇回</b> と出ます。<span class="nb">広告を1本見ると <b>+3回</b></span></span>
         </div>
       </div>
       <div class="panel" data-deck>
