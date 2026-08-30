@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使い方ガイド | 重ねて！ダメージ計算</title>
+<meta name="description" content="ポケモンチャンピオンズの画面に重ねて使うダメージ計算アプリ「重ねて！ダメージ計算」の使い方。権限の設定からパーティ登録、選出の読み取り、ダメージ計算、対戦記録まで、実際の画面で説明します。">
+<link rel="canonical" href="https://rakko-lab.github.io/battlesupport/guide/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+</head>
+<body>
+<style>
+  :root {
+    --ground:#F5F8F5; --surface:#FFFFFF; --surface-2:#EDF2ED;
+    --ink:#1B211D; --ink-muted:#5F6C64; --ink-faint:#8D9992;
+    --green:#2D5F3F; --green-deep:#1F4A30; --green-wash:#E4EEE7;
+    --amber:#B46A12; --amber-solid:#E0912F; --amber-wash:#FBEFDD;
+    --rule:#D6DFD8; --rule-soft:#E6ECE7;
+    --shadow:0 1px 2px rgba(27,33,29,.06), 0 8px 24px rgba(27,33,29,.06);
+    --frame:#2A322D; --frame-screen:#F2F5F2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#101512; --surface:#181F1B; --surface-2:#1F2822;
+      --ink:#E4EDE7; --ink-muted:#9DAAA2; --ink-faint:#6E7C74;
+      --green:#7FC095; --green-deep:#A5D6B5; --green-wash:#1C2E23;
+      --amber:#E7A954; --amber-solid:#E0912F; --amber-wash:#2E2416;
+      --rule:#2C3831; --rule-soft:#232D27;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+      --frame:#050806; --frame-screen:#131A16;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#101512; --surface:#181F1B; --surface-2:#1F2822;
+    --ink:#E4EDE7; --ink-muted:#9DAAA2; --ink-faint:#6E7C74;
+    --green:#7FC095; --green-deep:#A5D6B5; --green-wash:#1C2E23;
+    --amber:#E7A954; --amber-solid:#E0912F; --amber-wash:#2E2416;
+    --rule:#2C3831; --rule-soft:#232D27;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+    --frame:#050806; --frame-screen:#131A16;
+  }
+
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--ground); color:var(--ink);
+         font-family:"Noto Sans JP", system-ui, -apple-system, sans-serif;
+         font-size:15px; line-height:1.85; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3 { font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif; text-wrap:balance; margin:0; }
+  .mono { font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; }
+  a { color:var(--green); }
+  :focus-visible { outline:2px solid var(--amber-solid); outline-offset:3px; border-radius:3px; }
+
+  .proto { background:var(--amber-wash); border-bottom:1px solid var(--rule); color:var(--amber);
+           padding:10px 20px; display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline; justify-content:center; }
+  .proto b { color:var(--ink); font-weight:700; }
+  .proto span { font-size:.84rem; color:var(--ink-muted); }
+
+  .shell { display:grid; grid-template-columns:232px minmax(0,1fr); gap:48px;
+           max-width:1180px; margin:0 auto; padding:40px 28px 96px; align-items:start; }
+
+  .rail { position:sticky; top:28px; max-height:calc(100vh - 56px); overflow-y:auto; }
+  .brandmark { display:flex; align-items:center; gap:10px; padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--rule); }
+  .brandmark .stack { width:26px; height:26px; position:relative; flex:none; }
+  .brandmark .stack i { position:absolute; inset:0; border:2px solid var(--green); border-radius:4px; display:block; }
+  .brandmark .stack i:nth-child(1) { transform:translate(-4px,-4px); opacity:.35; }
+  .brandmark .stack i:nth-child(2) { background:var(--surface); }
+  .brandmark .name { font-family:"Zen Kaku Gothic New",sans-serif; font-weight:900; font-size:.98rem; line-height:1.3; }
+  .brandmark .kicker { color:var(--ink-faint); font-size:.72rem; letter-spacing:.08em; }
+
+  .toc { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px; }
+  .toc a { display:grid; grid-template-columns:22px minmax(0,1fr); gap:8px; align-items:baseline;
+           padding:6px 8px; border-radius:5px; text-decoration:none; color:var(--ink-muted); font-size:.875rem; line-height:1.5; }
+  .toc a:hover { background:var(--surface-2); color:var(--ink); }
+  .toc a[aria-current="true"] { background:var(--green-wash); color:var(--green-deep); font-weight:700; }
+  .toc .n { font-family:"JetBrains Mono",monospace; font-size:.7rem; color:var(--ink-faint); }
+  .toc a[aria-current="true"] .n { color:var(--green); }
+  .rail-note { margin-top:20px; padding-top:16px; border-top:1px solid var(--rule);
+               font-size:.78rem; color:var(--ink-faint); line-height:1.7; overflow-wrap:anywhere; }
+
+  .content { min-width:0; display:flex; flex-direction:column; gap:56px; }
+
+  .lede .eyebrow { color:var(--green); margin-bottom:10px; }
+  .lede h1 { font-size:2.05rem; font-weight:900; letter-spacing:-.01em; line-height:1.35; }
+  .lede p { max-width:62ch; color:var(--ink-muted); margin:14px 0 0; }
+  .paths { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:24px; }
+  .path { border:1px solid var(--rule); border-radius:8px; padding:13px 15px; background:var(--surface); }
+  .path b { display:block; font-family:"Zen Kaku Gothic New",sans-serif; font-size:.95rem; margin-bottom:2px; }
+  .path span { font-size:.83rem; color:var(--ink-muted); line-height:1.7; display:block; }
+  /* 08 の2枚は 00 の3枚より一文が長い。同じ最小幅だと「残り〇回」のような短い語句が
+     途中で折れて読みにくくなるので、広めに取り、強調語だけ折り返しを禁じる。 */
+  .paths.pair { grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
+  .paths.pair span b { white-space:nowrap; }
+
+  section { scroll-margin-top:24px; }
+  .sec-head { display:flex; align-items:baseline; gap:12px; margin-bottom:6px; }
+  .sec-head .n { font-family:"JetBrains Mono",monospace; font-weight:700; font-size:.78rem; color:var(--green); padding-top:2px; }
+  .sec-head h2 { font-size:1.42rem; font-weight:700; letter-spacing:-.005em; }
+  .sec-sub { color:var(--ink-muted); max-width:62ch; margin:0 0 24px; }
+
+  .hero { margin:26px 0 0; border-radius:12px; overflow:hidden; border:1px solid var(--rule);
+          box-shadow:var(--shadow); background:var(--frame); position:relative; }
+  .hero video { width:100%; display:block; }
+  .hero figcaption { position:absolute; left:0; right:0; bottom:0;
+                     background:linear-gradient(transparent, rgba(0,0,0,.72));
+                     color:#EAF1EC; font-size:.82rem; padding:26px 16px 11px; line-height:1.6; }
+
+  .panel { container-type:inline-size; background:var(--surface); border:1px solid var(--rule);
+           border-radius:10px; box-shadow:var(--shadow); overflow:hidden; }
+  .step { display:grid; grid-template-columns:300px minmax(0,1fr); border-top:1px solid var(--rule); }
+  .step:first-child { border-top:none; }
+  .step.wide { grid-template-columns:minmax(0,520px) minmax(0,1fr); }
+
+  .stage { background:var(--surface-2); border-right:1px solid var(--rule); padding:22px 20px;
+           display:flex; flex-direction:column; align-items:center; gap:12px; min-width:0; }
+  .phone { width:min(208px,100%); flex:none; border-radius:22px; background:var(--frame);
+           padding:9px 7px 12px; box-shadow:0 10px 30px rgba(0,0,0,.22); position:relative; }
+  .phone.wide { width:min(474px,100%); border-radius:14px; padding:7px 9px 9px; }
+  .phone:before { content:""; position:absolute; top:4px; left:50%; transform:translateX(-50%);
+                  width:46px; height:3px; border-radius:2px; background:rgba(255,255,255,.22); }
+  .phone.wide:before { display:none; }
+  .screen { position:relative; aspect-ratio:9/19; border-radius:15px; background:var(--frame-screen); overflow:hidden; }
+  .phone.wide .screen { aspect-ratio:2412/1080; border-radius:8px; }
+  .screen video, .screen img { width:100%; height:100%; object-fit:cover; display:block; }
+  .kind { color:var(--ink-faint); font-size:.72rem; text-align:center; }
+
+  .hs { position:absolute; width:24px; height:24px; border-radius:50%; border:2px solid #fff;
+        background:var(--amber-solid); color:#22160A; font-family:"JetBrains Mono",monospace;
+        font-weight:700; font-size:.74rem; display:grid; place-items:center; cursor:pointer;
+        padding:0; box-shadow:0 2px 8px rgba(0,0,0,.45); transition:transform .16s ease;
+        transform:translate(-50%,-50%); }
+  .hs:hover, .hs[aria-pressed="true"] { transform:translate(-50%,-50%) scale(1.16); }
+  .hs[aria-pressed="true"] { background:var(--green); color:#fff; }
+  .hs:after { content:""; position:absolute; inset:-7px; border-radius:50%;
+              border:2px solid var(--amber-solid); opacity:0; animation:ping 2.4s ease-out infinite; }
+  .hs[aria-pressed="true"]:after { display:none; }
+  @keyframes ping { 0%{opacity:.7;transform:scale(.7)} 70%{opacity:0;transform:scale(1.25)} 100%{opacity:0;transform:scale(1.25)} }
+  @media (prefers-reduced-motion: reduce) { .hs:after{animation:none} .hs,.hs:hover{transition:none} }
+
+  .notes { padding:24px 26px 26px; display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .notes h3 { font-size:1.02rem; font-weight:700; }
+  .notes > p { color:var(--ink-muted); margin:0; max-width:58ch; }
+  .hs-notes { display:flex; flex-direction:column; gap:8px; }
+  .hs-note { border-left:3px solid var(--amber-solid); background:var(--amber-wash);
+             border-radius:0 6px 6px 0; padding:11px 15px; }
+  .hs-note .lbl { color:var(--amber); display:block; margin-bottom:2px; }
+  .hs-note p { margin:0; font-size:.89rem; line-height:1.75; }
+  .hs-hint { color:var(--ink-faint); font-size:.84rem; margin:0; display:none; }
+
+  details.deep { border:1px solid var(--rule); border-radius:7px; background:var(--ground); overflow:hidden; }
+  details.deep summary { cursor:pointer; padding:11px 15px; font-size:.88rem; font-weight:700;
+                         color:var(--green-deep); list-style:none; display:flex; align-items:center; gap:9px; }
+  details.deep summary::-webkit-details-marker { display:none; }
+  details.deep summary:before { content:"＋"; font-family:"JetBrains Mono",monospace; color:var(--green); font-size:.8rem; flex:none; }
+  details.deep[open] summary:before { content:"−"; }
+  details.deep summary:hover { background:var(--surface-2); }
+  details.deep .inner { padding:2px 15px 15px 38px; font-size:.89rem; color:var(--ink-muted);
+                        border-top:1px solid var(--rule-soft); line-height:1.8; }
+  details.deep .inner p { margin:12px 0 0; }
+
+  .deck-nav { display:none; align-items:center; gap:8px; justify-content:center;
+              padding:12px; border-top:1px solid var(--rule); background:var(--surface); }
+  .deck-nav button { font-family:"JetBrains Mono",monospace; font-size:.72rem; border:1px solid var(--rule);
+                     background:var(--surface); color:var(--ink); border-radius:5px; padding:5px 11px; cursor:pointer; }
+  .deck-nav button:hover:not(:disabled) { border-color:var(--green); color:var(--green); }
+  .deck-nav button:disabled { opacity:.35; cursor:default; }
+  .dots { display:flex; gap:5px; padding:0 4px; }
+  .dots i { width:6px; height:6px; border-radius:50%; background:var(--rule); display:block; }
+  .dots i.on { background:var(--green); }
+
+  .plain { border:1px solid var(--rule); border-radius:10px; background:var(--surface);
+           box-shadow:var(--shadow); padding:6px 26px 22px; }
+  .plain h3 { font-size:1rem; margin-top:18px; }
+  .plain p { color:var(--ink-muted); margin:6px 0 0; max-width:60ch; }
+
+  footer.pagefoot { border-top:1px solid var(--rule); padding-top:20px; color:var(--ink-faint); font-size:.82rem; line-height:1.8; }
+
+  /* -------------------------------------------------------------
+     Responsive rules live at the END on purpose: a plain rule of the
+     same specificity written later silently cancels a media query.
+     Keeping every override here makes that impossible.
+     ------------------------------------------------------------- */
+  @container (max-width: 660px) {
+    .step, .step.wide { grid-template-columns:minmax(0,1fr); }
+    .stage { border-right:none; border-bottom:1px solid var(--rule); }
+  }
+  @supports not (container-type: inline-size) {
+    @media (max-width: 1000px) {
+      .step, .step.wide { grid-template-columns:minmax(0,1fr); }
+      .stage { border-right:none; border-bottom:1px solid var(--rule); }
+    }
+  }
+  @media (max-width: 1000px) {
+    .shell { grid-template-columns:minmax(0,1fr); gap:28px; padding:28px 22px 72px; }
+    .rail { position:static; max-height:none; overflow:visible; padding-bottom:20px; border-bottom:1px solid var(--rule); }
+    .toc { display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:2px 12px; }
+    .rail-note { display:none; }
+    .lede h1 { font-size:1.7rem; }
+  }
+  @media (max-width: 560px) {
+    .shell { padding:22px 16px 64px; }
+    .notes { padding:20px 18px 22px; }
+    .lede h1 { font-size:1.46rem; }
+  }
+</style>
+
+<div class="shell">
+  <nav class="rail" aria-label="目次">
+    <div class="brandmark">
+      <div class="stack" aria-hidden="true"><i></i><i></i></div>
+      <div>
+        <div class="name">重ねて！<br>ダメージ計算</div>
+        <div class="kicker mono">使い方ガイド</div>
+      </div>
+    </div>
+    <ul class="toc" id="toc">
+      <li><a href="#s0"><span class="n">00</span><span>はじめに</span></a></li>
+      <li><a href="#s1"><span class="n">01</span><span>最初の設定</span></a></li>
+      <li><a href="#s2"><span class="n">02</span><span>パーティを登録する</span></a></li>
+      <li><a href="#s3"><span class="n">03</span><span>相手の選出を読み取る</span></a></li>
+      <li><a href="#s4"><span class="n">04</span><span>ダメージ計算</span></a></li>
+      <li><a href="#s5"><span class="n">05</span><span>選出分析</span></a></li>
+      <li><a href="#s6"><span class="n">06</span><span>構築サーチ</span></a></li>
+      <li><a href="#s7"><span class="n">07</span><span>対戦記録と戦績</span></a></li>
+      <li><a href="#s8"><span class="n">08</span><span>広告と残り回数</span></a></li>
+      <li><a href="#s9"><span class="n">09</span><span>うまく読み取れないとき</span></a></li>
+    </ul>
+    <p class="rail-note">左の並びがそのまま1枚のページです。ページを分けないので、アプリからは <code>#s8</code> のように<b>節を名指しで開けます</b>。</p>
+  </nav>
+
+  <main class="content">
+
+    <!-- ============ 00 ============ -->
+    <section class="lede" id="s0">
+      <h1>ポケモンチャンピオンズの画面に<br>重ねて使うダメージ計算アプリです</h1>
+      <p>
+        対戦中、アプリを切り替えずにダメージ計算・選出分析・対戦記録ができます。
+        ここでは、インストールしてから実際に使えるようになるまでを順番に説明します。
+        アプリの中では書ききれなかった細かい話は、各節の <b>＋ もう少し詳しく</b> に入れてあります。
+      </p>
+      <figure class="hero">
+        <video src="media/c3_overlay.webm" autoplay muted loop playsinline poster="media/poster_overlay.jpg"></video>
+        <figcaption>ゲームを閉じずに、パネルがそのまま上に乗ります。</figcaption>
+      </figure>
+      <div class="paths">
+        <div class="path"><b>① 重ねて撮る</b><span>同じ端末で遊んでいるとき。画面をそのまま読み取ります。このガイドの中心です。</span></div>
+        <div class="path"><b>② カメラで撮る</b><span>テレビなど別の画面で遊んでいるとき。カメラを向けて撮ります。</span></div>
+        <div class="path"><b>③ 撮らずに使う</b><span>手入力だけでダメージ計算。<b>権限も撮影も要りません。</b>→ 04節</span></div>
+      </div>
+      <p style="font-size:.85rem; color:var(--ink-faint); margin-top:20px;">
+        このアプリと本ガイドは有志が作ったもので、ポケモンチャンピオンズの公式ではありません。
+        撮影した画面の画像が端末の外に送られることはありません。
+      </p>
+    </section>
+
+    <!-- ============ 01 ============ -->
+    <section id="s1">
+      <div class="sec-head"><span class="n">01</span><h2>最初の設定</h2></div>
+      <p class="sec-sub">重ねて表示するために、Android に2つの許可を出します。ここだけ他のアプリと手順が違うので、つまずきやすい場所です。</p>
+      <div class="panel" data-deck>
+        <article class="step">
+          <div class="stage">
+            <div class="phone"><div class="screen"><video src="media/c1_permission.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">録画：許可の画面 〜 設定 〜 完了</div>
+          </div>
+          <div class="notes">
+            <h3>1. 「他のアプリの上に重ねて表示」を許可する</h3>
+            <p>これが無いと、ゲームの上にパネルを出すことができません。「許可する」を押すと設定アプリに切り替わるので、アプリの一覧をスクロールしてこのアプリを探し、<b>「常に許可する」</b>を選んでから戻ってきてください。</p>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>なぜ普通のアプリより手順が多いのか。</b> この許可は Android が特別扱いしています。他のアプリの表示を隠せてしまうため、アプリ側からその場で許可を求めることができず、必ず設定アプリへ移動する形になっています。</p>
+              <p><b>あとで切ってしまったときは。</b> 端末の設定 → アプリ → このアプリ →「他のアプリの上に重ねて表示」から、いつでも入れ直せます。</p>
+              <p><b>許可しなくてもアプリは使えます。</b> 重ねる機能だけが使えなくなります。手入力のダメージ計算（04節）はそのまま動きます。</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="media/s1_consent.jpg" alt="画面キャプチャの同意ダイアログ">
+              <button class="hs" type="button" data-x="61" data-y="66">1</button>
+              <button class="hs" type="button" data-x="44" data-y="66">2</button>
+            </div></div>
+            <div class="kind mono">スクリーンショット：キャプチャの同意</div>
+          </div>
+          <div class="notes">
+            <h3>2. 画面の読み取りに同意する</h3>
+            <p>相手の選出画面を読み取るために、画面のキャプチャを許可します。</p>
+            <p class="hs-hint">画面の <b style="color:var(--amber)">●</b> を押すと、その部分の説明が出ます。</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — 今すぐ開始</span><p>ここを押した時点から読み取りができます。押さずに閉じた場合、撮影しようとしても何も起きません。</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — 毎回聞かれます</span><p>この確認は起動のたびに出ます。アプリ側で消すことはできません（Android の決まりです）。</p></div>
+            </div>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>撮った画像はどこへ行くのか。</b> 読み取りは端末の中だけで完結します。撮影した画面の画像が端末の外に送られることはありません。</p>
+              <p><b>なぜ毎回確認が出るのか。</b> 画面キャプチャの許可は一度きりしか与えられない決まりで、アプリを起動し直すたびに取り直す必要があります。煩わしいのですが、仕様上どうにもなりません。</p>
+              <p><b>向きに注意。</b> 同意したときの画面の向きで、読み取りの基準が決まります。横向きで遊ぶなら、<b>横向きにしてから</b>同意すると安定します。</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 02 ============ -->
+    <section id="s2">
+      <div class="sec-head"><span class="n">02</span><h2>パーティを登録する</h2></div>
+      <p class="sec-sub">先に自分のパーティを登録しておくと、対戦中の計算が「自分の実物の数値」で行われます。登録の方法は2つあります。</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="media/s2.jpg" alt="スクショから登録した6体">
+              <button class="hs" type="button" data-x="93" data-y="8">1</button>
+              <button class="hs" type="button" data-x="30" data-y="45">2</button>
+            </div></div>
+            <div class="kind mono">スクリーンショット：スクショで登録</div>
+          </div>
+          <div class="notes">
+            <h3>方法A：ステータス画面を撮って登録する</h3>
+            <p>ゲームのステータス画面を撮ると、6体をまとめて読み取ります。ホームの<b>「スクショで登録」</b>から始めます。</p>
+            <p class="hs-hint">画面の <b style="color:var(--amber)">●</b> を押すと、その部分の説明が出ます。</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — 撮り直し / 保存</span><p>読み取り結果を見てから決められます。おかしければ撮り直し、問題なければ保存です。<b>保存するまで登録はされません。</b></p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — 読み取った中身</span><p>種族・持ち物・特性・性格・技・努力値まで読み取ります。1か所だけ違う、ということもあるので、保存前にひと通り目を通してください。</p></div>
+            </div>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>読み取れなかった項目は、あとから手で直せます。</b> 撮り直しても同じところで失敗するときは、直接編集した方が早いです。</p>
+              <p><b>うまくいかない端末があります。</b> 画面が小さい機種や、比率の特殊な機種（折りたたみ・タブレット・エミュレータ）では読み取りが外れることがあります。その場合は方法B（テキスト貼り付け）が確実です。</p>
+              <p><b>言語について。</b> ゲームの表示言語が日本語以外でも読み取れます。うまくいかないときは、アプリの言語設定をゲームと揃えてみてください。</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step">
+          <div class="stage">
+            <div class="phone"><div class="screen"><img src="media/s3.jpg" alt="テキストから読み込む画面"></div></div>
+            <div class="kind mono">スクリーンショット：テキストから読み込む</div>
+          </div>
+          <div class="notes">
+            <h3>方法B：テキストを貼り付けて登録する</h3>
+            <p>対戦シミュレータで使われている形式のテキストを、そのまま貼り付けて登録できます。<b>撮影が要らないので、確実です。</b>書き出しもできるので、他のツールへ持ち出すこともできます。</p>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>6体まとめて貼り付けられます。</b> 1体ずつ入れ直す必要はありません。</p>
+              <p><b>読み取りに失敗する端末では、こちらが本命です。</b> 画面の比率や解像度に左右されないので、どの端末でも同じ結果になります。</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 03 ============ -->
+    <section id="s3">
+      <div class="sec-head"><span class="n">03</span><h2>相手の選出を読み取る</h2></div>
+      <p class="sec-sub">選出画面を撮ると、相手の6体が並びます。<b>違っていたら、その場で押して直せます</b>——ここを知らないまま使っている方が多いはずの機能です。</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen"><video src="media/c2_launch.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">録画：オーバーレイを出す</div>
+          </div>
+          <div class="notes">
+            <h3>1. パネルを出す</h3>
+            <p>ホームの<b>「対戦を始める」</b>を押すと、パネルがゲームの上に出ます。あとはゲームに戻って、いつもどおり遊んでください。パネルは畳んでおけます。</p>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>先にパーティを選びます。</b> 使用中のパーティでパネルが起動します。登録がまだなら、02節を先に済ませてください。</p>
+              <p><b>パネルは動かせます。</b> 邪魔なときは畳んでおいて、必要になったら開きます。畳んでも計算の内容は消えません。</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="media/poster_overlay.jpg" alt="選出画面を撮影しているところ">
+              <button class="hs" type="button" data-x="22" data-y="26">1</button>
+              <button class="hs" type="button" data-x="22" data-y="62">2</button>
+            </div></div>
+            <div class="kind mono">スクリーンショット：選出画面で撮影する</div>
+          </div>
+          <div class="notes">
+            <h3>2. 選出画面で撮影ボタンを押す</h3>
+            <p>相手の6体が並んでいる画面で撮ります。読み取りは1〜2秒で終わります。</p>
+            <p class="hs-hint">画面の <b style="color:var(--amber)">●</b> を押すと、その部分の説明が出ます。</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — 撮る場所</span><p>相手の6体が<b>全部表示されている状態</b>で撮ってください。一部が隠れていると、その分だけ読み取れません。</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — 撮らずに進む</span><p>読み取りを使わずに、そのままダメージ計算へ進むこともできます。相手を手で入力したいときはこちらです。</p></div>
+            </div>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>何を見て判断しているのか。</b> 6体それぞれの絵を、手元のデータと照らし合わせています。ゲームの通信内容を読んでいるわけではありません。</p>
+              <p><b>だから、絵が変わると弱くなります。</b> 色違いは通常より読み取りにくく、見た目のよく似たものは取り違えることがあります。次の手順で直せます。</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen"><video src="media/c4_fix.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">録画：6体が並ぶ 〜 5体目を選び直す</div>
+          </div>
+          <div class="notes">
+            <h3>3. 違っていたら、押して直す</h3>
+            <p>認識は完璧ではありません。1体だけ違う、ということは起こります。そのときは<b>間違っている枠を押してください。</b>候補の一覧が出るので、正しいものを選び直せます。名前で絞り込むこともできます。</p>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>直した内容は、そのあとの計算にすべて反映されます。</b> ダメージ計算も選出分析も、直したあとの6体で組み直されます。撮り直す必要はありません。</p>
+              <p><b>直しても回数は減りません。</b> 手直しは何度でもできます（08節）。</p>
+              <p><b>直した結果を送るかどうかは選べます。</b> 既定では、撮った画像が端末の外に出ることはありません。</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 04 ============ -->
+    <section id="s4">
+      <div class="sec-head"><span class="n">04</span><h2>ダメージ計算</h2></div>
+      <p class="sec-sub">このアプリの中心です。重ねたまま使う方法と、撮影せずに単体で開く方法があります。</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen"><video src="media/c5_calc.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">録画：重ねたまま計算する</div>
+          </div>
+          <div class="notes">
+            <h3>重ねたまま計算する</h3>
+            <p>左が自分、右が相手です。技を選ぶと、真ん中にダメージの幅と<b>確定数</b>が出ます。持ち物・特性・天候・状態異常なども、下の「＋ もちもの / 特性 / やけど / 天候 などを追加」から足せます。</p>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>数字の読み方。</b> 「95.8% − 112.7%」は最小と最大です。その上の「乱1 68.8%」は、<b>1発で倒せる確率</b>を意味します。「確2」は2発で確実に倒せるという意味です。</p>
+              <p><b>攻守交代。</b> ボタンひとつで、自分が殴る側と殴られる側を入れ替えられます。両方向を見てから選出を決められます。</p>
+              <p><b>すばやさタブ。</b> どちらが先に動くかを、持ち物やランク補正まで含めて比べられます。こだわりスカーフを持っている想定の行も出ます。</p>
+              <p><b>選ぶのはドラムロールです。</b> 縦に回して選びます。指を離した位置で決まるので、勢いよく回すより、少しずつ動かす方が速いことがあります。</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="media/s4.jpg" alt="ホームのダメージ計算カード">
+              <button class="hs" type="button" data-x="25" data-y="63">1</button>
+            </div></div>
+            <div class="kind mono">スクリーンショット：撮影なしで開く</div>
+          </div>
+          <div class="notes">
+            <h3>撮影せずに開く（権限も要りません）</h3>
+            <p>ホームの<b>「ダメージ計算 — 撮影なし・手入力で使う」</b>から、計算画面だけを開けます。</p>
+            <p class="hs-hint">画面の <b style="color:var(--amber)">●</b> を押すと、その部分の説明が出ます。</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — ここから開きます</span><p>重ねる許可も、画面の読み取りも要りません。読み取りがうまくいかない端末でも、ここは必ず動きます。</p></div>
+            </div>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>縦でも横でも使えます。</b> 片手で入力したいときは縦、対戦を見ながらなら横、と持ち替えて構いません。</p>
+              <p><b>読み取りが苦手な環境での本命です。</b> 端末の比率や解像度に左右されないので、どの端末でも同じように動きます。</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 05 ============ -->
+    <section id="s5">
+      <div class="sec-head"><span class="n">05</span><h2>選出分析</h2></div>
+      <p class="sec-sub">相手の6体を読み取ったあとに使えます。「どれを出すか」を決めるための画面です。</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="media/s5.jpg" alt="対面一覧の6×6マトリクス">
+              <button class="hs" type="button" data-x="40" data-y="55">1</button>
+              <button class="hs" type="button" data-x="30" data-y="26">2</button>
+            </div></div>
+            <div class="kind mono">スクリーンショット：対面一覧</div>
+          </div>
+          <div class="notes">
+            <h3>対面一覧 — 6×6を一度に見る</h3>
+            <p>自分の6体と相手の6体の、すべての組み合わせを一度に出します。色が濃いほど有利です。</p>
+            <p class="hs-hint">画面の <b style="color:var(--amber)">●</b> を押すと、その部分の説明が出ます。</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — 1マスの意味</span><p>上段が<b>自分が与えるダメージ</b>、下段が<b>受けるダメージ</b>です。押すと、その対面の詳しい内訳が出ます。</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — 想定の前提</span><p>相手の持ち物・特性・努力値は分からないので、<b>使用率の高いもの</b>を仮に置いています。ここを押すと前提を変えられます。</p></div>
+            </div>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>これは予測ではなく計算です。</b> 相手の型を当てているのではなく、「この前提ならこうなる」を全部並べているだけです。前提を変えれば結果も変わります。</p>
+              <p><b>最悪想定と現実想定。</b> 相手が一番痛い技を選んでくる前提（最悪想定）と、実際に選ばれやすい技の前提（現実想定）を切り替えられます。既定は最悪想定です。</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="media/s6.jpg" alt="先発タブ">
+              <button class="hs" type="button" data-x="22" data-y="62">1</button>
+              <button class="hs" type="button" data-x="66" data-y="62">2</button>
+            </div></div>
+            <div class="kind mono">スクリーンショット：先発</div>
+          </div>
+          <div class="notes">
+            <h3>先発 — 最初の1体を決める</h3>
+            <p>一覧を全部読まなくても、<b>「先に出すならこれ」</b>が上から順に出ます。</p>
+            <p class="hs-hint">画面の <b style="color:var(--amber)">●</b> を押すと、その部分の説明が出ます。</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — 先発おすすめ</span><p>有利を取れる相手の数と、負ける相手の数を並べています。数字は「何体に有利か」です。</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — 相手の初手警戒度</span><p>相手が最初に出してきそうな順です。その1体に対して自分の誰が刺さるかも一緒に出ます。</p></div>
+            </div>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>並び順は「勝てる数」だけで決めていません。</b> 一方的に取れるか、削られるか、先に動けるかを合わせて見ています。</p>
+              <p><b>選び終えたら、そのままダメージ計算へ進めます。</b> 選んだ3体で計算画面が組まれます。</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 06 ============ -->
+    <section id="s6">
+      <div class="sec-head"><span class="n">06</span><h2>構築サーチ</h2></div>
+      <p class="sec-sub">相手の6体が、過去シーズンで公開された上位構築と<b>完全に一致したとき</b>だけ出ます。そのときは、持ち物・特性・性格・努力値・技まで分かった状態で計算できます。</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="media/s7.jpg" alt="構築サーチの結果">
+              <button class="hs" type="button" data-x="25" data-y="40">1</button>
+              <button class="hs" type="button" data-x="50" data-y="89">2</button>
+            </div></div>
+            <div class="kind mono">スクリーンショット：一致したとき</div>
+          </div>
+          <div class="notes">
+            <h3>一致したときだけ、タブが増えます</h3>
+            <p>6体すべてが一致したときにだけ出ます。<b>ほとんどの対戦では出ません</b>——出たときは、かなり確かな情報だと思ってください。</p>
+            <p class="hs-hint">画面の <b style="color:var(--amber)">●</b> を押すと、その部分の説明が出ます。</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — どの構築か</span><p>シーズンと最終順位が出ます。同じ6体を複数の方が使っていた場合は、候補が並びます。</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — 想定してダメ計</span><p>押すと、その構築の中身を相手側に入れた状態で計算できます。<b>見るだけなら回数は減りません。</b></p></div>
+            </div>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>データはどこから来ているのか。</b> シーズン終了後に公開される上位構築の記事から集めたものを、アプリに同梱しています。対戦中に外部へ問い合わせているわけではありません。</p>
+              <p><b>だから、今シーズンの構築は入っていません。</b> 記事はシーズンが終わってから出るためです。新しいシーズンは、終わったあとに追加されます。</p>
+              <p><b>ルールが変わっても使えます。</b> ルール改定で増えることはあっても、過去に使えたものが使えなくなるわけではないので、前のシーズンの構築もそのまま参考になります。ただし<b>持ち物は変わっている可能性が高くなります</b>（候補が増えるため）。別のルールのシーズンの構築には、その旨が出ます。</p>
+              <p><b>対象シーズンは選べます。</b> 設定 →「構築サーチの対象シーズン」で、古いシーズンを外すことができます。初期設定では全て対象になっています。</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 07 ============ -->
+    <section id="s7">
+      <div class="sec-head"><span class="n">07</span><h2>対戦記録と戦績</h2></div>
+      <p class="sec-sub">対戦が終わったら、その場で記録できます。あとから見返すと、どのパーティがどの相手に勝てているかが分かります。</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen"><video src="media/c6_record.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">録画：「戦績を記録」から記録画面へ</div>
+          </div>
+          <div class="notes">
+            <h3>計算パネルの「戦績を記録」から</h3>
+            <p>勝敗・自分の選出・相手の選出・メモ・レート帯を残せます。</p>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p><b>あとから直せます。</b> 記録を長押しすると編集できます。勝敗・相手名・メモ・形式・レートを、後から入れ直せます。</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 08 ============ -->
+    <section id="s8">
+      <div class="sec-head"><span class="n">08</span><h2>広告と残り回数</h2></div>
+      <div class="paths pair" style="margin-top:18px; margin-bottom:24px;">
+        <div class="path">
+          <b>ときどき広告のお願いが出ます</b>
+          <span>ダメージ計算を何回か使うと出ます。<b>「後で見る」</b>で先送りできます。続けて先送りできる回数には上限があります。<br>数えておく必要はありません。</span>
+        </div>
+        <div class="path">
+          <b>3つの機能は「残り回数」を使います</b>
+          <span>構築サーチ・選出分析・上位構築の呼び出し。<br>画面に <b>残り〇回</b> と出ます。広告を1本見ると <b>+3回</b></span>
+        </div>
+      </div>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="media/s8.jpg" alt="残り回数と広告のボタン">
+              <button class="hs" type="button" data-x="30" data-y="72">1</button>
+              <button class="hs" type="button" data-x="30" data-y="80">2</button>
+            </div></div>
+            <div class="kind mono">スクリーンショット：残り回数</div>
+          </div>
+          <div class="notes">
+            <h3>「残り回数」を使うのは3つだけです</h3>
+            <p>ダメージ計算・パーティ登録・読み取り・手直し・対戦記録は、<b>回数を使わずに何度でも</b>使えます。</p>
+            <p class="hs-hint">画面の <b style="color:var(--amber)">●</b> を押すと、その部分の説明が出ます。</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — 残り〇回</span><p>いま何回分使えるかが出ます。<b>1回の対戦につき1回分</b>で、同じ画面を開き直しても減りません。<b>0 のときは押しても進みません</b>——故障ではありません。</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — 広告を見て+3回</span><p>広告を1本見ると3回分増えます。対戦中でなくても増やせます。</p></div>
+            </div>
+            <details class="deep"><summary>もう少し詳しく</summary><div class="inner">
+              <p>①選出分析（対面一覧と初手は<b>2つで1回分</b>）<br>②構築サーチ<br>③上位構築の呼び出し<br>それぞれ別に数えます。</p>
+              <p><b>同じ対戦なら、開き直しても減りません。</b> 一度開いた画面を閉じてまた開いても、手直しをしても、減りません。</p>
+              <p><b>増やし方は2つ。</b> 広告を1本見ると +3回分。3日以上連続でダメ計している方は、毎日5回分チャージされます。</p>
+              <p><b>Proプランに入ると、回数を気にしなくてよくなります。</b> 広告も出なくなります。</p>
+              <p><b>「応援」を購入しても、機能は増えません。</b> 回数も増えませんし、広告も消えません。純粋な寄付です。</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 09 ============ -->
+    <section id="s9">
+      <div class="sec-head"><span class="n">09</span><h2>うまく読み取れないとき</h2></div>
+      <p class="sec-sub">読み取りが効かないときは、上から順に確かめてください。</p>
+      <div class="plain">
+        <h3>1. アプリを更新した直後ではありませんか</h3>
+        <p>更新のあと、出しっぱなしのパネルが古いままになっていることがあります。<b>1体も読み取れない（0/6）ときは、パネルを一度閉じて、アプリから開き直してください。</b></p>
+        <h3>2. 同意したときの向きと、いまの向きが違いませんか</h3>
+        <p>画面の読み取りは、<b>同意したときの向き</b>を基準にします。縦のまま同意して横で遊ぶと、ずれることがあります。横で遊ぶなら、横にしてから同意し直してください。</p>
+        <h3>3. 認識結果が正しくなくても修正できます</h3>
+        <p>タップしたら他のポケモンの候補に切り替わります。それでも出てこなければ、手動で修正してください（03節）。</p>
+        <h3>4. それでも読み取れない端末があります</h3>
+        <p>画面の比率が特殊な機種（折りたたみ・タブレット・エミュレータ・小さい画面）では、うまくいかないことがあります。その場合は<b>04節の「撮影なしのダメージ計算」</b>と<b>02節の方法B（テキスト貼り付け）</b>をお使いください。どちらも端末に左右されません。</p>
+        <h3>それでも直らないときは</h3>
+        <p>アプリのホームにある<b>「ご意見・報告」</b>から送ってください。お使いの端末と、そのときの画面が分かると、こちらで原因を追えます。</p>
+      </div>
+    </section>
+
+    <footer class="pagefoot">
+      <a href="../">重ねて！ダメージ計算 トップ</a> ／
+      <a href="../privacy/">プライバシーポリシー</a> ／
+      <a href="https://play.google.com/store/apps/details?id=com.rakkolab.battlesupport" target="_blank" rel="noopener">Google Play</a> ／
+      <a href="https://x.com/rakkolab" target="_blank" rel="noopener">X (@rakkolab)</a><br>
+      このアプリと本ガイドは有志が作ったもので、ポケモンチャンピオンズの公式ではありません。<br>
+      © RAKKO-LAB
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  // Progressive enhancement: without this script every step is already in the DOM and readable,
+  // stacked one after another. All this does is fold each deck into one-step-at-a-time and turn
+  // the hotspot notes into something you open by pressing the dot.
+  document.documentElement.classList.add("js");
+
+  var style = document.createElement("style");
+  style.textContent =
+    ".js .step { display:none; }" +
+    ".js .step.on { display:grid; }" +
+    ".js .deck-nav { display:flex; }" +
+    ".js .hs-note { display:none; }" +
+    ".js .hs-note.on { display:block; }" +
+    ".js .hs-hint { display:block; }" +
+    ".js .hs-hint.off { display:none; }";
+  document.head.appendChild(style);
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-deck]"), function (deck) {
+    var steps = Array.prototype.slice.call(deck.querySelectorAll(".step"));
+    var i = 0;
+
+    // Anything that changes this panel's height reflows the page under the reader and the panel
+    // slides out from under them (Ryo 2026-08-30: 「どこを見ているのかわからなくなる」). Pin the
+    // panel's top edge: measure it, make the change, then scroll by the difference. Used by both the
+    // step buttons and the hotspot notes, since both resize the panel.
+    var keepInPlace = function (change) {
+      var before = deck.getBoundingClientRect().top;
+      change();
+      var after = deck.getBoundingClientRect().top;
+      if (after !== before) window.scrollBy(0, after - before);
+    };
+
+    steps.forEach(function (step) {
+      var spots = Array.prototype.slice.call(step.querySelectorAll(".hs"));
+      var notes = Array.prototype.slice.call(step.querySelectorAll(".hs-note"));
+      var hint = step.querySelector(".hs-hint");
+      spots.forEach(function (b, k) {
+        b.style.left = b.getAttribute("data-x") + "%";
+        b.style.top = b.getAttribute("data-y") + "%";
+        b.textContent = String(k + 1);
+        b.setAttribute("aria-pressed", "false");
+        b.setAttribute("aria-label", "説明を開く " + (k + 1));
+        b.addEventListener("click", function () {
+          keepInPlace(function () {
+            var wasOn = notes[k] && notes[k].classList.contains("on");
+            notes.forEach(function (n) { n.classList.remove("on"); });
+            spots.forEach(function (s) { s.setAttribute("aria-pressed", "false"); });
+            if (!wasOn && notes[k]) {
+              notes[k].classList.add("on");
+              b.setAttribute("aria-pressed", "true");
+            }
+            if (hint) hint.classList.toggle("off", !wasOn);
+          });
+        });
+      });
+    });
+
+    if (steps.length > 1) {
+      var nav = document.createElement("nav");
+      nav.className = "deck-nav";
+      var prev = document.createElement("button");
+      prev.type = "button"; prev.textContent = "◀ 戻る"; prev.setAttribute("aria-label", "前の手順へ");
+      var dots = document.createElement("div");
+      dots.className = "dots"; dots.setAttribute("aria-hidden", "true");
+      var next = document.createElement("button");
+      next.type = "button"; next.textContent = "次へ ▶"; next.setAttribute("aria-label", "次の手順へ");
+      nav.appendChild(prev); nav.appendChild(dots); nav.appendChild(next);
+      deck.appendChild(nav);
+
+      var show = function () {
+        steps.forEach(function (s, k) { s.classList.toggle("on", k === i); });
+        dots.innerHTML = "";
+        steps.forEach(function (_, k) {
+          var d = document.createElement("i");
+          if (k === i) d.className = "on";
+          dots.appendChild(d);
+        });
+        prev.disabled = (i === 0);
+        next.disabled = (i === steps.length - 1);
+      };
+      prev.addEventListener("click", function () { if (i > 0) keepInPlace(function () { i--; show(); }); });
+      next.addEventListener("click", function () { if (i < steps.length - 1) keepInPlace(function () { i++; show(); }); });
+      show();
+    } else {
+      steps.forEach(function (s) { s.classList.add("on"); });
+    }
+  });
+
+  var links = Array.prototype.slice.call(document.querySelectorAll("#toc a"));
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) {
+          a.setAttribute("aria-current", a.getAttribute("href") === "#" + e.target.id ? "true" : "false");
+        });
+      });
+    }, { rootMargin: "-15% 0px -75% 0px" });
+    links.forEach(function (a) {
+      var t = document.getElementById(a.getAttribute("href").slice(1));
+      if (t) io.observe(t);
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
