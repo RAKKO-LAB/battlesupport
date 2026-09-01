@@ -645,16 +645,26 @@
   // the hotspot notes into something you open by pressing the dot.
   document.documentElement.classList.add("js");
 
+  // The steps become a horizontal, snapping track (Ryo 2026-09-01: 押しても、スワイプでも動くように).
+  // Built with CSS scroll-snap rather than a gesture handler: swiping is then the browser's own
+  // scrolling — momentum, rubber-banding and cancel-mid-drag all behave the way the rest of the
+  // phone does, and there is no touch code to get wrong. Side effect worth having: laying the steps
+  // out side by side means switching one no longer changes the panel's height, so the reflow that
+  // used to move the page under the reader cannot happen at all.
   var style = document.createElement("style");
   style.textContent =
-    ".js .step { display:none; }" +
-    ".js .step.on { display:grid; }" +
+    ".js .deck-track { display:flex; overflow-x:auto; scroll-snap-type:x mandatory;" +
+    "  overscroll-behavior-x:contain; scrollbar-width:none; }" +
+    ".js .deck-track::-webkit-scrollbar { display:none; }" +
+    ".js .deck-track > .step { flex:0 0 100%; scroll-snap-align:start; border-top:none; }" +
     ".js .deck-nav { display:flex; }" +
     ".js .hs-note { display:none; }" +
     ".js .hs-note.on { display:block; }" +
     ".js .hs-hint { display:block; }" +
     ".js .hs-hint.off { display:none; }";
   document.head.appendChild(style);
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   Array.prototype.forEach.call(document.querySelectorAll("[data-deck]"), function (deck) {
     var steps = Array.prototype.slice.call(deck.querySelectorAll(".step"));
@@ -697,6 +707,16 @@
     });
 
     if (steps.length > 1) {
+      // Wrap the steps in a scrolling track. Done in JS, not in the markup, so the page without
+      // JavaScript keeps the plain stacked steps it has always had.
+      var track = document.createElement("div");
+      track.className = "deck-track";
+      track.setAttribute("tabindex", "0");
+      track.setAttribute("role", "group");
+      track.setAttribute("aria-label", "手順（左右にスワイプできます）");
+      deck.insertBefore(track, steps[0]);
+      steps.forEach(function (s) { track.appendChild(s); });
+
       var nav = document.createElement("nav");
       nav.className = "deck-nav";
       var prev = document.createElement("button");
@@ -708,22 +728,46 @@
       nav.appendChild(prev); nav.appendChild(dots); nav.appendChild(next);
       deck.appendChild(nav);
 
-      var show = function () {
-        steps.forEach(function (s, k) { s.classList.toggle("on", k === i); });
-        dots.innerHTML = "";
-        steps.forEach(function (_, k) {
-          var d = document.createElement("i");
-          if (k === i) d.className = "on";
-          dots.appendChild(d);
-        });
+      steps.forEach(function () {
+        dots.appendChild(document.createElement("i"));
+      });
+      var pips = Array.prototype.slice.call(dots.children);
+
+      // The scroll position is the single source of truth for "which step". Buttons scroll; the
+      // scroll handler updates the buttons. Keeping one direction of flow means a swipe and a press
+      // cannot disagree about where we are.
+      var paint = function () {
+        pips.forEach(function (d, k) { d.className = k === i ? "on" : ""; });
         prev.disabled = (i === 0);
         next.disabled = (i === steps.length - 1);
       };
-      prev.addEventListener("click", function () { if (i > 0) keepInPlace(function () { i--; show(); }); });
-      next.addEventListener("click", function () { if (i < steps.length - 1) keepInPlace(function () { i++; show(); }); });
-      show();
-    } else {
-      steps.forEach(function (s) { s.classList.add("on"); });
+      var goTo = function (k) {
+        i = Math.max(0, Math.min(steps.length - 1, k));
+        track.scrollTo({ left: i * track.clientWidth, behavior: REDUCED ? "auto" : "smooth" });
+        paint();
+      };
+      prev.addEventListener("click", function () { goTo(i - 1); });
+      next.addEventListener("click", function () { goTo(i + 1); });
+
+      var ticking = false;
+      track.addEventListener("scroll", function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(function () {
+          ticking = false;
+          var w = track.clientWidth;
+          if (!w) return;
+          var k = Math.round(track.scrollLeft / w);
+          if (k !== i) { i = k; paint(); }
+        });
+      }, { passive: true });
+
+      // A resize changes the step width, so the saved index no longer matches the scroll offset.
+      window.addEventListener("resize", function () {
+        track.scrollTo({ left: i * track.clientWidth, behavior: "auto" });
+      });
+
+      paint();
     }
   });
 
