@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User guide | Kasanete! Damage Calc</title>
+<meta name="description" content="How to use Kasanete! Damage Calc, a damage calculator that sits on top of Pokemon Champions: permissions, registering your team, reading the opponent, damage calculation and battle records, shown on real screens.">
+<link rel="canonical" href="https://rakko-lab.github.io/battlesupport/guide/en/">
+<link rel="alternate" hreflang="ja" href="https://rakko-lab.github.io/battlesupport/guide/">
+<link rel="alternate" hreflang="en" href="https://rakko-lab.github.io/battlesupport/guide/en/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  :root {
+    --ground:#F5F8F5; --surface:#FFFFFF; --surface-2:#EDF2ED;
+    --ink:#1B211D; --ink-muted:#5F6C64; --ink-faint:#8D9992;
+    --green:#2D5F3F; --green-deep:#1F4A30; --green-wash:#E4EEE7;
+    --amber:#B46A12; --amber-solid:#E0912F; --amber-wash:#FBEFDD;
+    --rule:#D6DFD8; --rule-soft:#E6ECE7;
+    --shadow:0 1px 2px rgba(27,33,29,.06), 0 8px 24px rgba(27,33,29,.06);
+    --frame:#2A322D; --frame-screen:#F2F5F2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#101512; --surface:#181F1B; --surface-2:#1F2822;
+      --ink:#E4EDE7; --ink-muted:#9DAAA2; --ink-faint:#6E7C74;
+      --green:#7FC095; --green-deep:#A5D6B5; --green-wash:#1C2E23;
+      --amber:#E7A954; --amber-solid:#E0912F; --amber-wash:#2E2416;
+      --rule:#2C3831; --rule-soft:#232D27;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+      --frame:#050806; --frame-screen:#131A16;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#101512; --surface:#181F1B; --surface-2:#1F2822;
+    --ink:#E4EDE7; --ink-muted:#9DAAA2; --ink-faint:#6E7C74;
+    --green:#7FC095; --green-deep:#A5D6B5; --green-wash:#1C2E23;
+    --amber:#E7A954; --amber-solid:#E0912F; --amber-wash:#2E2416;
+    --rule:#2C3831; --rule-soft:#232D27;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+    --frame:#050806; --frame-screen:#131A16;
+  }
+
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--ground); color:var(--ink);
+         font-family:"Noto Sans JP", system-ui, -apple-system, sans-serif;
+         font-size:15px; line-height:1.85; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3 { font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif; text-wrap:balance; margin:0; }
+  /* 日本語は単語区切りが無いので、既定では語の途中でも折れる。auto-phrase は文節の切れ目を
+     選んでくれる（Chrome 119+ / Android Chrome）。非対応ブラウザは今までどおり折り返すだけで、
+     壊れない。固定の <br> で見た目を作ると狭い画面で必ず破綻するので、そちらは使わない。 */
+  h1, h2, h3, p, .path span, .hs-note p, details.deep .inner p { word-break:auto-phrase; }
+  .mono { font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; }
+  a { color:var(--green); }
+  :focus-visible { outline:2px solid var(--amber-solid); outline-offset:3px; border-radius:3px; }
+
+  .proto { background:var(--amber-wash); border-bottom:1px solid var(--rule); color:var(--amber);
+           padding:10px 20px; display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline; justify-content:center; }
+  .proto b { color:var(--ink); font-weight:700; }
+  .proto span { font-size:.84rem; color:var(--ink-muted); }
+
+  .shell { display:grid; grid-template-columns:232px minmax(0,1fr); gap:48px;
+           max-width:1180px; margin:0 auto; padding:40px 28px 96px; align-items:start; }
+
+  .rail { position:sticky; top:28px; max-height:calc(100vh - 56px); overflow-y:auto; }
+  .brandmark { display:flex; align-items:center; gap:10px; padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--rule); }
+  .brandmark .stack { width:26px; height:26px; position:relative; flex:none; }
+  .brandmark .stack i { position:absolute; inset:0; border:2px solid var(--green); border-radius:4px; display:block; }
+  .brandmark .stack i:nth-child(1) { transform:translate(-4px,-4px); opacity:.35; }
+  .brandmark .stack i:nth-child(2) { background:var(--surface); }
+  .brandmark .name { font-family:"Zen Kaku Gothic New",sans-serif; font-weight:900; font-size:.98rem; line-height:1.3; }
+  .brandmark .kicker { color:var(--ink-faint); font-size:.72rem; letter-spacing:.08em; }
+
+  .toc { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px; }
+  .toc a { display:grid; grid-template-columns:22px minmax(0,1fr); gap:8px; align-items:baseline;
+           padding:6px 8px; border-radius:5px; text-decoration:none; color:var(--ink-muted); font-size:.875rem; line-height:1.5; }
+  .toc a:hover { background:var(--surface-2); color:var(--ink); }
+  .toc a[aria-current="true"] { background:var(--green-wash); color:var(--green-deep); font-weight:700; }
+  .toc .n { font-family:"JetBrains Mono",monospace; font-size:.7rem; color:var(--ink-faint); }
+  .toc a[aria-current="true"] .n { color:var(--green); }
+  .rail-note { margin-top:20px; padding-top:16px; border-top:1px solid var(--rule);
+               font-size:.78rem; color:var(--ink-faint); line-height:1.7; overflow-wrap:anywhere; }
+
+  .content { min-width:0; display:flex; flex-direction:column; gap:56px; }
+
+  .lede .eyebrow { color:var(--green); margin-bottom:10px; }
+  .lede h1 { font-size:2.05rem; font-weight:900; letter-spacing:-.01em; line-height:1.35; }
+  .lede p { max-width:62ch; color:var(--ink-muted); margin:14px 0 0; }
+  .paths { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:24px; }
+  .path { border:1px solid var(--rule); border-radius:8px; padding:13px 15px; background:var(--surface); }
+  .path b { display:block; font-family:"Zen Kaku Gothic New",sans-serif; font-size:.95rem; margin-bottom:2px; }
+  .path span { font-size:.83rem; color:var(--ink-muted); line-height:1.7; display:block; }
+  /* 08 の2枚は 00 の3枚より一文が長い。同じ最小幅だと「残り〇回」のような短い語句が
+     途中で折れて読みにくくなるので、広めに取り、強調語だけ折り返しを禁じる。 */
+  .paths.pair { grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); }
+  /* 短い句だけ折り返しを禁じる。長い文に nowrap を掛けると狭い画面ではみ出すので、
+     対象は「途中で切れると意味が読めなくなる」数語に限る。 */
+  .nb { white-space:nowrap; }
+
+  section { scroll-margin-top:24px; }
+  .sec-head { display:flex; align-items:baseline; gap:12px; margin-bottom:6px; }
+  .sec-head .n { font-family:"JetBrains Mono",monospace; font-weight:700; font-size:.78rem; color:var(--green); padding-top:2px; }
+  .sec-head h2 { font-size:1.42rem; font-weight:700; letter-spacing:-.005em; }
+  .sec-sub { color:var(--ink-muted); max-width:62ch; margin:0 0 24px; }
+
+  .hero { margin:26px 0 0; border-radius:12px; overflow:hidden; border:1px solid var(--rule);
+          box-shadow:var(--shadow); background:var(--frame); position:relative; }
+  .hero video { width:100%; display:block; }
+  .hero figcaption { position:absolute; left:0; right:0; bottom:0;
+                     background:linear-gradient(transparent, rgba(0,0,0,.72));
+                     color:#EAF1EC; font-size:.82rem; padding:26px 16px 11px; line-height:1.6; }
+
+  .panel { container-type:inline-size; background:var(--surface); border:1px solid var(--rule);
+           border-radius:10px; box-shadow:var(--shadow); overflow:hidden; }
+  .step { display:grid; grid-template-columns:300px minmax(0,1fr); border-top:1px solid var(--rule); }
+  .step:first-child { border-top:none; }
+  .step.wide { grid-template-columns:minmax(0,520px) minmax(0,1fr); }
+
+  .stage { background:var(--surface-2); border-right:1px solid var(--rule); padding:22px 20px;
+           display:flex; flex-direction:column; align-items:center; gap:12px; min-width:0; }
+  .phone { width:min(208px,100%); flex:none; border-radius:22px; background:var(--frame);
+           padding:9px 7px 12px; box-shadow:0 10px 30px rgba(0,0,0,.22); position:relative; }
+  .phone.wide { width:min(474px,100%); border-radius:14px; padding:7px 9px 9px; }
+  .phone:before { content:""; position:absolute; top:4px; left:50%; transform:translateX(-50%);
+                  width:46px; height:3px; border-radius:2px; background:rgba(255,255,255,.22); }
+  .phone.wide:before { display:none; }
+  .screen { position:relative; aspect-ratio:9/19; border-radius:15px; background:var(--frame-screen); overflow:hidden; }
+  .phone.wide .screen { aspect-ratio:2412/1080; border-radius:8px; }
+  .screen video, .screen img { width:100%; height:100%; object-fit:cover; display:block; }
+  .kind { color:var(--ink-faint); font-size:.72rem; text-align:center; }
+
+  .hs { position:absolute; width:24px; height:24px; border-radius:50%; border:2px solid #fff;
+        background:var(--amber-solid); color:#22160A; font-family:"JetBrains Mono",monospace;
+        font-weight:700; font-size:.74rem; display:grid; place-items:center; cursor:pointer;
+        padding:0; box-shadow:0 2px 8px rgba(0,0,0,.45); transition:transform .16s ease;
+        transform:translate(-50%,-50%); }
+  .hs:hover, .hs[aria-pressed="true"] { transform:translate(-50%,-50%) scale(1.16); }
+  .hs[aria-pressed="true"] { background:var(--green); color:#fff; }
+  .hs:after { content:""; position:absolute; inset:-7px; border-radius:50%;
+              border:2px solid var(--amber-solid); opacity:0; animation:ping 2.4s ease-out infinite; }
+  .hs[aria-pressed="true"]:after { display:none; }
+  @keyframes ping { 0%{opacity:.7;transform:scale(.7)} 70%{opacity:0;transform:scale(1.25)} 100%{opacity:0;transform:scale(1.25)} }
+  @media (prefers-reduced-motion: reduce) { .hs:after{animation:none} .hs,.hs:hover{transition:none} }
+
+  .notes { padding:24px 26px 26px; display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .notes h3 { font-size:1.02rem; font-weight:700; }
+  .notes > p { color:var(--ink-muted); margin:0; max-width:58ch; }
+  .hs-notes { display:flex; flex-direction:column; gap:8px; }
+  .hs-note { border-left:3px solid var(--amber-solid); background:var(--amber-wash);
+             border-radius:0 6px 6px 0; padding:11px 15px; }
+  .hs-note .lbl { color:var(--amber); display:block; margin-bottom:2px; }
+  .hs-note p { margin:0; font-size:.89rem; line-height:1.75; }
+  .hs-hint { color:var(--ink-faint); font-size:.84rem; margin:0; display:none; }
+
+  details.deep { border:1px solid var(--rule); border-radius:7px; background:var(--ground); overflow:hidden; }
+  details.deep summary { cursor:pointer; padding:11px 15px; font-size:.88rem; font-weight:700;
+                         color:var(--green-deep); list-style:none; display:flex; align-items:center; gap:9px; }
+  details.deep summary::-webkit-details-marker { display:none; }
+  details.deep summary:before { content:"＋"; font-family:"JetBrains Mono",monospace; color:var(--green); font-size:.8rem; flex:none; }
+  details.deep[open] summary:before { content:"−"; }
+  details.deep summary:hover { background:var(--surface-2); }
+  details.deep .inner { padding:2px 15px 15px 38px; font-size:.89rem; color:var(--ink-muted);
+                        border-top:1px solid var(--rule-soft); line-height:1.8; }
+  details.deep .inner p { margin:12px 0 0; }
+
+  .deck-nav { display:none; align-items:center; gap:8px; justify-content:center;
+              padding:12px; border-top:1px solid var(--rule); background:var(--surface); }
+  .deck-nav button { font-family:"JetBrains Mono",monospace; font-size:.72rem; border:1px solid var(--rule);
+                     background:var(--surface); color:var(--ink); border-radius:5px; padding:5px 11px; cursor:pointer; }
+  .deck-nav button:hover:not(:disabled) { border-color:var(--green); color:var(--green); }
+  .deck-nav button:disabled { opacity:.35; cursor:default; }
+  .dots { display:flex; gap:5px; padding:0 4px; }
+  .dots i { width:6px; height:6px; border-radius:50%; background:var(--rule); display:block; }
+  .dots i.on { background:var(--green); }
+
+  .plain { border:1px solid var(--rule); border-radius:10px; background:var(--surface);
+           box-shadow:var(--shadow); padding:6px 26px 22px; }
+  .plain h3 { font-size:1rem; margin-top:18px; }
+  .plain p { color:var(--ink-muted); margin:6px 0 0; max-width:60ch; }
+
+  footer.pagefoot { border-top:1px solid var(--rule); padding-top:20px; color:var(--ink-faint); font-size:.82rem; line-height:1.8; }
+
+  /* -------------------------------------------------------------
+     Responsive rules live at the END on purpose: a plain rule of the
+     same specificity written later silently cancels a media query.
+     Keeping every override here makes that impossible.
+     ------------------------------------------------------------- */
+  @container (max-width: 660px) {
+    .step, .step.wide { grid-template-columns:minmax(0,1fr); }
+    .stage { border-right:none; border-bottom:1px solid var(--rule); }
+  }
+  @supports not (container-type: inline-size) {
+    @media (max-width: 1000px) {
+      .step, .step.wide { grid-template-columns:minmax(0,1fr); }
+      .stage { border-right:none; border-bottom:1px solid var(--rule); }
+    }
+  }
+  @media (max-width: 1000px) {
+    .shell { grid-template-columns:minmax(0,1fr); gap:28px; padding:28px 22px 72px; }
+    .rail { position:static; max-height:none; overflow:visible; padding-bottom:20px; border-bottom:1px solid var(--rule); }
+    .toc { display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:2px 12px; }
+    .rail-note { display:none; }
+    .lede h1 { font-size:1.7rem; }
+  }
+  @media (max-width: 560px) {
+    .shell { padding:22px 16px 64px; }
+    .notes { padding:20px 18px 22px; }
+    .lede h1 { font-size:1.46rem; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail" aria-label="Contents">
+    <div class="brandmark">
+      <div class="stack" aria-hidden="true"><i></i><i></i></div>
+      <div>
+        <div class="name">Kasanete!<br>Damage Calc</div>
+        <div class="kicker mono">User guide</div>
+      </div>
+    </div>
+    <ul class="toc" id="toc">
+      <li><a href="#s0"><span class="n">00</span><span>Start here</span></a></li>
+      <li><a href="#s1"><span class="n">01</span><span>First-time setup</span></a></li>
+      <li><a href="#s2"><span class="n">02</span><span>Register your team</span></a></li>
+      <li><a href="#s3"><span class="n">03</span><span>Read the opponent</span></a></li>
+      <li><a href="#s4"><span class="n">04</span><span>Damage calculation</span></a></li>
+      <li><a href="#s5"><span class="n">05</span><span>Matchup analysis</span></a></li>
+      <li><a href="#s6"><span class="n">06</span><span>Team search</span></a></li>
+      <li><a href="#s7"><span class="n">07</span><span>Battle records</span></a></li>
+      <li><a href="#s8"><span class="n">08</span><span>Ads and uses left</span></a></li>
+      <li><a href="#s9"><span class="n">09</span><span>When reading fails</span></a></li>
+    </ul>
+    <p class="rail-note">Everything is on this one page, so the app can open a section directly — <code>#s8</code>, for instance. <a href="../">日本語</a></p>
+  </nav>
+
+  <main class="content">
+
+    <!-- ============ 00 ============ -->
+    <section class="lede" id="s0">
+      <h1>A damage calculator that sits on top of Pokémon Champions</h1>
+      <p>
+        Work out damage, plan your lead and log the result without leaving the battle.
+        This guide walks through everything from installing the app to using it in a real match.
+        Details that would clutter the app itself are tucked into the <b>+ A bit more</b> panels.
+      </p>
+      <figure class="hero">
+        <video src="../media/c3_overlay.webm" autoplay muted loop playsinline poster="../media/poster_overlay.jpg"></video>
+        <figcaption>The panel sits over the game. You never close it.</figcaption>
+      </figure>
+      <div class="paths">
+        <div class="path"><b>1. Read the screen</b><span>Playing on this phone. The app reads the screen directly. Most of this guide covers it.</span></div>
+        <div class="path"><b>2. Photograph it</b><span>Playing on a TV or another screen. Point the camera at it.</span></div>
+        <div class="path"><b>3. Type it in</b><span>Damage calculation by hand. <b>No permissions, no capture.</b> → section 04</span></div>
+      </div>
+      <p style="font-size:.85rem; color:var(--ink-faint); margin-top:20px;">
+        This app and this guide are made by a fan and are not official Pokémon Champions products.
+        Nothing you capture leaves your device.
+      </p>
+    </section>
+
+    <!-- ============ 01 ============ -->
+    <section id="s1">
+      <div class="sec-head"><span class="n">01</span><h2>First-time setup</h2></div>
+      <p class="sec-sub">Two Android permissions are needed before the panel can appear over the game. This is the one part that works differently from an ordinary app, so it is where people get stuck.</p>
+      <div class="panel" data-deck>
+        <article class="step">
+          <div class="stage">
+            <div class="phone"><div class="screen"><video src="../media/c1_permission.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">Recording: permission screen → settings → done</div>
+          </div>
+          <div class="notes">
+            <h3>1. Allow "Display over other apps"</h3>
+            <p>Without this the panel cannot appear over the game. Tapping Allow sends you to the system settings; scroll the app list, find this app, choose <b>Always allow</b>, then come back.</p>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>Why this takes more steps than usual.</b> Android treats this permission specially, because it lets an app cover what other apps are showing. An app cannot grant it in place — you always go out to the system settings.</p>
+              <p><b>If you turn it off later.</b> Settings → Apps → this app → "Display over other apps" turns it back on at any time.</p>
+              <p><b>The app still works without it.</b> You only lose the overlay. Manual damage calculation (section 04) is unaffected.</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="../media/s1_consent.jpg" alt="Screen capture consent dialog">
+              <button class="hs" type="button" data-x="61" data-y="66">1</button>
+              <button class="hs" type="button" data-x="44" data-y="66">2</button>
+            </div></div>
+            <div class="kind mono">Screenshot: capture consent</div>
+          </div>
+          <div class="notes">
+            <h3>2. Allow screen capture</h3>
+            <p>Reading the opponent's team needs permission to capture the screen.</p>
+            <p class="hs-hint">Press a <b style="color:var(--amber)">●</b> on the screen for an explanation of that part.</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — Start now</span><p>Capture works from the moment you tap this. If you dismiss the dialog instead, tapping the capture button later does nothing.</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — Asked every time</span><p>This dialog appears each time the app starts. The app cannot suppress it — that is Android's rule.</p></div>
+            </div>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>Where the images go.</b> Nowhere. Reading happens on the device; captured screens are not uploaded.</p>
+              <p><b>Why it asks every time.</b> Screen-capture consent is granted once per session by design, so it has to be taken again after every restart. It is tedious, and there is nothing the app can do about it.</p>
+              <p><b>Orientation matters.</b> The orientation you consent in becomes the reference for reading. If you play in landscape, <b>rotate first, then consent</b>.</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 02 ============ -->
+    <section id="s2">
+      <div class="sec-head"><span class="n">02</span><h2>Register your team</h2></div>
+      <p class="sec-sub">Registering your own six first means every calculation uses your real numbers. There are two ways to do it.</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="../media/s2.jpg" alt="Six units registered from a screenshot">
+              <button class="hs" type="button" data-x="93" data-y="8">1</button>
+              <button class="hs" type="button" data-x="30" data-y="45">2</button>
+            </div></div>
+            <div class="kind mono">Screenshot: register from a capture</div>
+          </div>
+          <div class="notes">
+            <h3>Option A: capture the status screen</h3>
+            <p>Capture the game's status screen and all six are read at once. Start from <b>Register from screenshot</b> on the home screen.</p>
+            <p class="hs-hint">Press a <b style="color:var(--amber)">●</b> on the screen for an explanation of that part.</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — Retake / Save</span><p>You see the result before committing to it. Retake if it looks wrong; save if it does not. <b>Nothing is registered until you save.</b></p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — What gets read</span><p>Species, held item, ability, nature, moves and EVs. One field being wrong is possible, so glance over it before saving.</p></div>
+            </div>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>A nickname stops the name being read.</b> This is the most common reason a slot comes back blank. Tap the empty slot and pick the right one — everything else on that slot is still read correctly.</p>
+              <p><b>Anything that fails can be fixed by hand afterwards.</b> If retaking keeps failing at the same field, editing it directly is quicker.</p>
+              <p><b>Some devices struggle.</b> Unusual screen shapes — foldables, tablets, emulators — can throw the reading off. Option B is reliable there.</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step">
+          <div class="stage">
+            <div class="phone"><div class="screen"><img src="../media/s3.jpg" alt="Import from text"></div></div>
+            <div class="kind mono">Screenshot: import from text</div>
+          </div>
+          <div class="notes">
+            <h3>Option B: paste text</h3>
+            <p>Paste a team in the format battle simulators use and it registers directly. <b>No capture involved, so it always works.</b> Export works too, if you want to take a team elsewhere.</p>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>All six at once.</b> There is no need to enter them one at a time.</p>
+              <p><b>This is the reliable path on devices where reading fails.</b> It does not depend on screen shape or resolution, so the result is the same everywhere.</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 03 ============ -->
+    <section id="s3">
+      <div class="sec-head"><span class="n">03</span><h2>Read the opponent</h2></div>
+      <p class="sec-sub">Capture the team-preview screen and the opponent's six appear. <b>If one is wrong, you can fix it right there</b> — a feature plenty of people never find.</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen"><video src="../media/c2_launch.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">Recording: opening the panel</div>
+          </div>
+          <div class="notes">
+            <h3>1. Open the panel</h3>
+            <p><b>Start a battle</b> on the home screen puts the panel over the game. Go back to the game and play as usual — the panel folds away when you do not need it.</p>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>Pick a team first.</b> The panel opens with your active team. If you have not registered one yet, do section 02 first.</p>
+              <p><b>The panel moves and folds.</b> Fold it when it is in the way; folding does not lose what you have entered.</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="../media/poster_overlay.jpg" alt="Capturing the team preview screen">
+              <button class="hs" type="button" data-x="22" data-y="26">1</button>
+              <button class="hs" type="button" data-x="22" data-y="62">2</button>
+            </div></div>
+            <div class="kind mono">Screenshot: capturing team preview</div>
+          </div>
+          <div class="notes">
+            <h3>2. Capture on the team-preview screen</h3>
+            <p>Capture while the opponent's six are on screen. Reading takes a second or two.</p>
+            <p class="hs-hint">Press a <b style="color:var(--amber)">●</b> on the screen for an explanation of that part.</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — What to capture</span><p>Capture with <b>all six visible</b>. Anything covered cannot be read.</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — Skip the capture</span><p>You can go straight to damage calculation without reading anything, and enter the opponent by hand.</p></div>
+            </div>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>What it actually looks at.</b> The artwork of each of the six, matched against data on the device. It does not read the game's network traffic.</p>
+              <p><b>Which is why appearance matters.</b> Shinies are harder to read, and lookalikes get mixed up. The next step fixes both.</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen"><video src="../media/c4_fix.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">Recording: six read, then correcting the fifth</div>
+          </div>
+          <div class="notes">
+            <h3>3. Tap anything that is wrong</h3>
+            <p>Reading is not perfect, and one slot being wrong does happen. <b>Tap the wrong slot</b> and it cycles through the other candidates. If the right one does not come up, pick it by hand — you can filter by name.</p>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>Corrections carry through everything.</b> Damage calculation and matchup analysis are rebuilt from the corrected six. There is no need to capture again.</p>
+              <p><b>Correcting costs nothing.</b> Fix as many as you like (section 08).</p>
+              <p><b>Corrections are not uploaded by default.</b> Whether to share them is a setting, and captured screens stay on the device either way.</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 04 ============ -->
+    <section id="s4">
+      <div class="sec-head"><span class="n">04</span><h2>Damage calculation</h2></div>
+      <p class="sec-sub">The heart of the app. Use it over the game, or open it on its own without capturing anything.</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen"><video src="../media/c5_calc.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">Recording: calculating over the game</div>
+          </div>
+          <div class="notes">
+            <h3>Over the game</h3>
+            <p>You are on the left, the opponent on the right. Pick a move and the middle shows the damage range and how many hits it takes. Items, abilities, weather and status go in from <b>+ item / ability / burn / weather</b> underneath.</p>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>Reading the numbers.</b> "95.8% − 112.7%" is the minimum and maximum roll. The figure above it is <b>the chance of a one-hit KO</b>. A "2" marker means two hits always finish it.</p>
+              <p><b>Swap sides.</b> One button flips attacker and defender, so you can see both directions before choosing a lead.</p>
+              <p><b>The speed tab.</b> Compares who moves first, including items and stat changes, with a row for the assumption that the opponent is holding a Choice Scarf.</p>
+              <p><b>Selection is a drum roll.</b> Spin it vertically; the value is set where you lift your finger. Small nudges are often quicker than a hard flick.</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="../media/s4.jpg" alt="Damage calculation card on the home screen">
+              <button class="hs" type="button" data-x="25" data-y="63">1</button>
+            </div></div>
+            <div class="kind mono">Screenshot: opening it without capturing</div>
+          </div>
+          <div class="notes">
+            <h3>On its own, with no permissions</h3>
+            <p><b>Damage calculation — type it in, no capture</b> on the home screen opens just the calculator.</p>
+            <p class="hs-hint">Press a <b style="color:var(--amber)">●</b> on the screen for an explanation of that part.</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — Open it here</span><p>No overlay permission, no screen capture. This works on every device, including the ones where reading does not.</p></div>
+            </div>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>Portrait or landscape.</b> Hold it whichever way suits — one-handed in portrait, or landscape alongside a battle.</p>
+              <p><b>The dependable path.</b> Nothing here depends on screen shape or resolution.</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 05 ============ -->
+    <section id="s5">
+      <div class="sec-head"><span class="n">05</span><h2>Matchup analysis</h2></div>
+      <p class="sec-sub">Available once the opponent's six have been read. This is the screen for deciding who to bring.</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="../media/s5.jpg" alt="Six by six matchup grid">
+              <button class="hs" type="button" data-x="40" data-y="55">1</button>
+              <button class="hs" type="button" data-x="30" data-y="26">2</button>
+            </div></div>
+            <div class="kind mono">Screenshot: the matchup grid</div>
+          </div>
+          <div class="notes">
+            <h3>Every matchup at once</h3>
+            <p>All thirty-six pairings between your six and theirs. The stronger the colour, the better it is for you.</p>
+            <p class="hs-hint">Press a <b style="color:var(--amber)">●</b> on the screen for an explanation of that part.</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — Reading a cell</span><p>Top figure is <b>damage you deal</b>, bottom is <b>damage you take</b>. Tap for the full breakdown of that pairing.</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — The assumptions</span><p>The opponent's items, abilities and EVs are unknown, so <b>the most common spread</b> is assumed. Tap here to change what is assumed.</p></div>
+            </div>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>This is calculation, not prediction.</b> It is not guessing the opponent's build — it lays out what follows from a stated assumption. Change the assumption and the numbers change.</p>
+              <p><b>Worst case or likely case.</b> You can switch between assuming the opponent picks their most damaging move and assuming they pick what is usually picked. Worst case is the default.</p>
+            </div></details>
+          </div>
+        </article>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="../media/s6.jpg" alt="Lead tab">
+              <button class="hs" type="button" data-x="22" data-y="62">1</button>
+              <button class="hs" type="button" data-x="66" data-y="62">2</button>
+            </div></div>
+            <div class="kind mono">Screenshot: the lead tab</div>
+          </div>
+          <div class="notes">
+            <h3>Choosing a lead</h3>
+            <p>Rather than reading the whole grid, this ranks <b>who to send out first</b>.</p>
+            <p class="hs-hint">Press a <b style="color:var(--amber)">●</b> on the screen for an explanation of that part.</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — Suggested leads</span><p>How many of the opponent's six each of yours beats, against how many it loses to.</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — Their likely lead</span><p>Which of theirs is most likely to come out first, and which of yours answers it.</p></div>
+            </div>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>Not ranked on wins alone.</b> Whether the win is clean, how much you get chipped, and who moves first all feed into the order.</p>
+              <p><b>Finish here and go straight to the calculator</b> with the three you picked.</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 06 ============ -->
+    <section id="s6">
+      <div class="sec-head"><span class="n">06</span><h2>Team search</h2></div>
+      <p class="sec-sub">Appears only when the opponent's six <b>exactly match</b> a team published from a past season. When it does, you get their items, abilities, natures, EVs and moves.</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="../media/s7.jpg" alt="Team search result">
+              <button class="hs" type="button" data-x="25" data-y="40">1</button>
+              <button class="hs" type="button" data-x="50" data-y="89">2</button>
+            </div></div>
+            <div class="kind mono">Screenshot: a match</div>
+          </div>
+          <div class="notes">
+            <h3>The tab only appears on a match</h3>
+            <p>All six have to match. <b>Most battles will not produce one</b> — so when it does appear, the information behind it is unusually solid.</p>
+            <p class="hs-hint">Press a <b style="color:var(--amber)">●</b> on the screen for an explanation of that part.</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — Which team</span><p>The season and final placing. If several players brought the same six, you get a list.</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — Use this build</span><p>Loads that build onto the opponent's side of the calculator. <b>Looking costs nothing.</b></p></div>
+            </div>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>Where the data comes from.</b> Articles published after a season ends, collected and bundled into the app. Nothing is fetched mid-battle.</p>
+              <p><b>Which is why the current season is missing.</b> Those articles only appear once a season is over. New seasons are added afterwards.</p>
+              <p><b>Rule changes do not invalidate them.</b> A ruleset change adds to the pool rather than removing from it, so builds from earlier seasons are still things an opponent could be running. What does get less certain is the <b>held item</b>, because there are now more of them to choose from. Builds from a different ruleset are labelled as such.</p>
+              <p><b>You choose which seasons count.</b> Settings → "Seasons used by team search" lets you drop older ones. All are included to begin with.</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 07 ============ -->
+    <section id="s7">
+      <div class="sec-head"><span class="n">07</span><h2>Battle records</h2></div>
+      <p class="sec-sub">Log a battle when it ends. Over time it shows which of your teams beats what.</p>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen"><video src="../media/c6_record.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="kind mono">Recording: from "Log this battle" to the record screen</div>
+          </div>
+          <div class="notes">
+            <h3>From "Log this battle" in the calculator</h3>
+            <p>Result, your three, their three, a note and a rating band. <b>The six already read carry over</b>, so in practice you only enter the result.</p>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p><b>Editable afterwards.</b> Long-press a record to edit it — result, opponent name, note, format and rating band can all be changed later.</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 08 ============ -->
+    <section id="s8">
+      <div class="sec-head"><span class="n">08</span><h2>Ads and uses left</h2></div>
+      <div class="paths pair" style="margin-top:18px; margin-bottom:24px;">
+        <div class="path">
+          <b>An ad is offered now and then</b>
+          <span>After a number of calculations. <b>"Later"</b> defers it, though only so many times in a row. Nothing to keep track of.</span>
+        </div>
+        <div class="path">
+          <b>Three features spend "uses left"</b>
+          <span>Team search, matchup analysis, and loading a published team. The screen shows <b>uses left</b>. <span class="nb">One ad gives <b>+3</b></span></span>
+        </div>
+      </div>
+      <div class="panel" data-deck>
+        <article class="step wide">
+          <div class="stage">
+            <div class="phone wide"><div class="screen">
+              <img src="../media/s8.jpg" alt="Uses left and the ad button">
+              <button class="hs" type="button" data-x="30" data-y="72">1</button>
+              <button class="hs" type="button" data-x="30" data-y="80">2</button>
+            </div></div>
+            <div class="kind mono">Screenshot: uses left</div>
+          </div>
+          <div class="notes">
+            <h3>Only three things spend a use</h3>
+            <p>Damage calculation, registering a team, reading the opponent, correcting it and logging battles <b>never spend a use</b>.</p>
+            <p class="hs-hint">Press a <b style="color:var(--amber)">●</b> on the screen for an explanation of that part.</p>
+            <div class="hs-notes">
+              <div class="hs-note"><span class="lbl mono">POINT 1 — Uses left</span><p>How many are available. <b>One per battle</b>, and reopening the same screen does not spend another. <b>At zero, the button simply does not proceed</b> — nothing is broken.</p></div>
+              <div class="hs-note"><span class="lbl mono">POINT 2 — Watch an ad for +3</span><p>One ad adds three. You do not have to be in a battle.</p></div>
+            </div>
+            <details class="deep"><summary>A bit more</summary><div class="inner">
+              <p>1. Matchup analysis (the grid and the lead tab are <b>one use between them</b>)<br>2. Team search<br>3. Loading a published team<br>Each is counted separately.</p>
+              <p><b>Within one battle, reopening is free.</b> Closing and reopening a screen, or correcting a slot, does not spend anything.</p>
+              <p><b>Two ways to top up.</b> One ad gives +3. Using the calculator three days running gives 5 a day.</p>
+              <p><b>The Pro plan removes the counting.</b> Ads go away too.</p>
+              <p><b>Buying "Support the developer" unlocks nothing.</b> No uses, no ad removal. It is purely a tip.</p>
+            </div></details>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 09 ============ -->
+    <section id="s9">
+      <div class="sec-head"><span class="n">09</span><h2>When reading fails</h2></div>
+      <p class="sec-sub">Work down this list in order.</p>
+      <div class="plain">
+        <h3>1. Did the app just update?</h3>
+        <p>A panel left open across an update keeps running the old version. <b>If nothing at all is read (0 of 6), close the panel and open it again from the app.</b></p>
+        <h3>2. Is the orientation different from when you consented?</h3>
+        <p>Reading uses <b>the orientation you consented in</b> as its reference. Consenting in portrait and then playing in landscape throws it off. Rotate first, then consent again.</p>
+        <h3>3. A wrong result can be corrected</h3>
+        <p>Tapping a slot cycles through the other candidates. If the right one does not appear, set it by hand (section 03).</p>
+        <h3>4. Some devices simply struggle</h3>
+        <p>Unusual screen shapes — foldables, tablets, emulators, small screens — can defeat the reading. Use <b>the standalone calculator in section 04</b> and <b>Option B in section 02</b>; neither depends on the device.</p>
+        <h3>Still stuck?</h3>
+        <p>Send a report from <b>Feedback</b> on the home screen. Knowing your device and what was on screen lets us track the cause down.</p>
+      </div>
+    </section>
+
+    <footer class="pagefoot">
+      <a href="../../">Kasanete! Damage Calc home</a> /
+      <a href="../">日本語版</a> /
+      <a href="../../privacy/">Privacy policy</a> /
+      <a href="https://play.google.com/store/apps/details?id=com.rakkolab.battlesupport" target="_blank" rel="noopener">Google Play</a> /
+      <a href="https://x.com/rakkolab" target="_blank" rel="noopener">X (@rakkolab)</a><br>
+      This app and this guide are made by a fan and are not official Pokémon Champions products.<br>
+      © RAKKO-LAB
+    </footer>
+  </main>
+</div>
+<script>
+(function () {
+  "use strict";
+  // Progressive enhancement: without this script every step is already in the DOM and readable,
+  // stacked one after another. All this does is fold each deck into one-step-at-a-time and turn
+  // the hotspot notes into something you open by pressing the dot.
+  document.documentElement.classList.add("js");
+
+  // The steps become a horizontal, snapping track (Ryo 2026-09-01: 押しても、スワイプでも動くように).
+  // Built with CSS scroll-snap rather than a gesture handler: swiping is then the browser's own
+  // scrolling — momentum, rubber-banding and cancel-mid-drag all behave the way the rest of the
+  // phone does, and there is no touch code to get wrong. Side effect worth having: laying the steps
+  // out side by side means switching one no longer changes the panel's height, so the reflow that
+  // used to move the page under the reader cannot happen at all.
+  var style = document.createElement("style");
+  style.textContent =
+    ".js .deck-track { display:flex; overflow-x:auto; scroll-snap-type:x mandatory;" +
+    "  overscroll-behavior-x:contain; scrollbar-width:none; }" +
+    ".js .deck-track::-webkit-scrollbar { display:none; }" +
+    ".js .deck-track > .step { flex:0 0 100%; scroll-snap-align:start; border-top:none; }" +
+    ".js .deck-nav { display:flex; }" +
+    ".js .hs-note { display:none; }" +
+    ".js .hs-note.on { display:block; }" +
+    ".js .hs-hint { display:block; }" +
+    ".js .hs-hint.off { display:none; }";
+  document.head.appendChild(style);
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-deck]"), function (deck) {
+    var steps = Array.prototype.slice.call(deck.querySelectorAll(".step"));
+    var i = 0;
+
+    // Anything that changes this panel's height reflows the page under the reader and the panel
+    // slides out from under them (Ryo 2026-08-30: 「どこを見ているのかわからなくなる」). Pin the
+    // panel's top edge: measure it, make the change, then scroll by the difference. Used by both the
+    // step buttons and the hotspot notes, since both resize the panel.
+    var keepInPlace = function (change) {
+      var before = deck.getBoundingClientRect().top;
+      change();
+      var after = deck.getBoundingClientRect().top;
+      if (after !== before) window.scrollBy(0, after - before);
+    };
+
+    steps.forEach(function (step) {
+      var spots = Array.prototype.slice.call(step.querySelectorAll(".hs"));
+      var notes = Array.prototype.slice.call(step.querySelectorAll(".hs-note"));
+      var hint = step.querySelector(".hs-hint");
+      spots.forEach(function (b, k) {
+        b.style.left = b.getAttribute("data-x") + "%";
+        b.style.top = b.getAttribute("data-y") + "%";
+        b.textContent = String(k + 1);
+        b.setAttribute("aria-pressed", "false");
+        b.setAttribute("aria-label", "説明を開く " + (k + 1));
+        b.addEventListener("click", function () {
+          keepInPlace(function () {
+            var wasOn = notes[k] && notes[k].classList.contains("on");
+            notes.forEach(function (n) { n.classList.remove("on"); });
+            spots.forEach(function (s) { s.setAttribute("aria-pressed", "false"); });
+            if (!wasOn && notes[k]) {
+              notes[k].classList.add("on");
+              b.setAttribute("aria-pressed", "true");
+            }
+            if (hint) hint.classList.toggle("off", !wasOn);
+          });
+        });
+      });
+    });
+
+    if (steps.length > 1) {
+      // Wrap the steps in a scrolling track. Done in JS, not in the markup, so the page without
+      // JavaScript keeps the plain stacked steps it has always had.
+      var track = document.createElement("div");
+      track.className = "deck-track";
+      track.setAttribute("tabindex", "0");
+      track.setAttribute("role", "group");
+      track.setAttribute("aria-label", "手順（左右にスワイプできます）");
+      deck.insertBefore(track, steps[0]);
+      steps.forEach(function (s) { track.appendChild(s); });
+
+      var nav = document.createElement("nav");
+      nav.className = "deck-nav";
+      var prev = document.createElement("button");
+      prev.type = "button"; prev.textContent = "◀ 戻る"; prev.setAttribute("aria-label", "前の手順へ");
+      var dots = document.createElement("div");
+      dots.className = "dots"; dots.setAttribute("aria-hidden", "true");
+      var next = document.createElement("button");
+      next.type = "button"; next.textContent = "次へ ▶"; next.setAttribute("aria-label", "次の手順へ");
+      nav.appendChild(prev); nav.appendChild(dots); nav.appendChild(next);
+      deck.appendChild(nav);
+
+      steps.forEach(function () {
+        dots.appendChild(document.createElement("i"));
+      });
+      var pips = Array.prototype.slice.call(dots.children);
+
+      // The scroll position is the single source of truth for "which step". Buttons scroll; the
+      // scroll handler updates the buttons. Keeping one direction of flow means a swipe and a press
+      // cannot disagree about where we are.
+      var paint = function () {
+        pips.forEach(function (d, k) { d.className = k === i ? "on" : ""; });
+        prev.disabled = (i === 0);
+        next.disabled = (i === steps.length - 1);
+      };
+      var goTo = function (k) {
+        i = Math.max(0, Math.min(steps.length - 1, k));
+        track.scrollTo({ left: i * track.clientWidth, behavior: REDUCED ? "auto" : "smooth" });
+        paint();
+      };
+      prev.addEventListener("click", function () { goTo(i - 1); });
+      next.addEventListener("click", function () { goTo(i + 1); });
+
+      var ticking = false;
+      track.addEventListener("scroll", function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(function () {
+          ticking = false;
+          var w = track.clientWidth;
+          if (!w) return;
+          var k = Math.round(track.scrollLeft / w);
+          if (k !== i) { i = k; paint(); }
+        });
+      }, { passive: true });
+
+      // A resize changes the step width, so the saved index no longer matches the scroll offset.
+      window.addEventListener("resize", function () {
+        track.scrollTo({ left: i * track.clientWidth, behavior: "auto" });
+      });
+
+      paint();
+    }
+  });
+
+  var links = Array.prototype.slice.call(document.querySelectorAll("#toc a"));
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) {
+          a.setAttribute("aria-current", a.getAttribute("href") === "#" + e.target.id ? "true" : "false");
+        });
+      });
+    }, { rootMargin: "-15% 0px -75% 0px" });
+    links.forEach(function (a) {
+      var t = document.getElementById(a.getAttribute("href").slice(1));
+      if (t) io.observe(t);
+    });
+  }
+})();
+</script>
+</body>
+</html>
