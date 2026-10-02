@@ -6,74 +6,234 @@
 <title>重ねて！ダメージ計算 - RAKKO-LAB</title>
 <meta name="description" content="対戦ゲーム中、画面に重ねてダメージ計算と選出分析ができるAndroid向け対戦支援ツール。Google Playで配信中。">
 <link rel="canonical" href="https://rakko-lab.github.io/battlesupport/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="重ねて！ダメージ計算 - RAKKO-LAB">
+<meta property="og:description" content="対戦ゲーム中、画面に重ねてダメージ計算と選出分析ができるAndroid向け対戦支援ツール。Google Playで配信中。">
+<meta property="og:url" content="https://rakko-lab.github.io/battlesupport/">
+<meta property="og:image" content="https://rakko-lab.github.io/battlesupport/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F5F8F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
 <style>
-  :root { --green: #2D5F3F; --accent: #E8F0EA; --text: #2A2A2A; --sub: #888; }
-  * { box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
-         max-width: 720px; margin: 0 auto; padding: 32px 24px; line-height: 1.8;
-         color: var(--text); background: #fff; }
-  header { text-align: center; padding: 24px 0 8px; }
-  .sub { color: var(--sub); font-size: 0.9em; letter-spacing: 0.05em; }
-  h1 { color: var(--green); font-size: 1.8em; margin: 8px 0 4px; }
-  .badge { display: inline-block; background: var(--accent); color: var(--green);
-           font-size: 0.85em; font-weight: bold; padding: 6px 14px;
-           border-radius: 12px; margin-top: 12px; }
-  .cta { display: inline-block; background: var(--green); color: #fff; text-decoration: none;
-         font-weight: bold; padding: 12px 28px; border-radius: 8px; margin-top: 18px; }
-  .cta:hover { opacity: 0.9; }
-  .cta.secondary { background: #fff; color: var(--green); border: 2px solid var(--green);
-                   padding: 10px 26px; margin-left: 10px; }
-  h2 { color: var(--green); font-size: 1.15em; margin-top: 2em;
-       border-bottom: 1px solid var(--accent); padding-bottom: 6px; }
-  ul { padding-left: 1.3em; }
-  a { color: var(--green); }
-  .links a { display: inline-block; margin-right: 16px; }
-  .note { color: var(--sub); font-size: 0.9em; }
-  footer { color: var(--sub); font-size: 0.85em; text-align: center; margin-top: 3em; }
+  :root {
+    --ground:#F5F8F5; --surface:#FFFFFF; --surface-2:#EDF2ED;
+    --ink:#1B211D; --ink-muted:#5F6C64; --ink-faint:#6B7770;
+    --green:#2D5F3F; --green-deep:#1F4A30; --green-wash:#E4EEE7; --on-green:#FFFFFF;
+    --amber-solid:#E0912F;
+    --rule:#D6DFD8;
+    --shadow:0 1px 2px rgba(27,33,29,.06), 0 8px 24px rgba(27,33,29,.06);
+    --frame:#2A322D;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#101512; --surface:#181F1B; --surface-2:#1F2822;
+      --ink:#E4EDE7; --ink-muted:#9DAAA2; --ink-faint:#8A978F;
+      --green:#7FC095; --green-deep:#A5D6B5; --green-wash:#1C2E23; --on-green:#0F1A13;
+      --rule:#2C3831;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+      --frame:#050806;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#101512; --surface:#181F1B; --surface-2:#1F2822;
+    --ink:#E4EDE7; --ink-muted:#9DAAA2; --ink-faint:#8A978F;
+    --green:#7FC095; --green-deep:#A5D6B5; --green-wash:#1C2E23; --on-green:#0F1A13;
+    --rule:#2C3831;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+    --frame:#050806;
+  }
+
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--ground); color:var(--ink);
+         font-family:"Noto Sans JP", system-ui, -apple-system, sans-serif;
+         font-size:15px; line-height:1.85; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3 { font-family:"Zen Kaku Gothic New","Noto Sans JP",sans-serif; text-wrap:balance; margin:0; }
+  h1,h2,h3,p { word-break:auto-phrase; }
+  a { color:var(--green); }
+  :focus-visible { outline:2px solid var(--amber-solid); outline-offset:3px; border-radius:3px; }
+
+  .wrap { max-width:1040px; margin:0 auto; padding:0 16px; }
+  section { margin-top:56px; }
+  h2 { font-size:1.35rem; font-weight:700; margin-bottom:8px; }
+  .lead { color:var(--ink-muted); margin:0 0 20px; max-width:62ch; }
+
+  .hero { padding:40px 0 0; display:grid; grid-template-columns:minmax(0,1fr); gap:28px; align-items:center; }
+  .brand { color:var(--ink-faint); font-size:.78rem; letter-spacing:.12em; margin:0 0 8px; }
+  h1 { font-size:2rem; font-weight:900; line-height:1.35; }
+  .hero p.desc { color:var(--ink-muted); margin:12px 0 0; max-width:46ch; }
+  .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:0 24px;
+         border-radius:8px; font-weight:700; text-decoration:none; border:2px solid var(--green); }
+  .btn.primary { background:var(--green); color:var(--on-green); box-shadow:var(--shadow); font-size:1.02rem; padding:0 28px; }
+  .btn.secondary { background:transparent; color:var(--green); }
+  .btn:hover { opacity:.9; }
+  .platform { color:var(--ink-faint); font-size:.8rem; margin:12px 0 0; }
+
+  .frame { margin:0; border-radius:14px; background:var(--frame); padding:8px; box-shadow:var(--shadow); }
+  .frame video { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:8px; background:#000; }
+
+  .cards { display:grid; grid-template-columns:minmax(0,1fr); gap:20px; }
+  .card { margin:0; background:var(--surface); border:1px solid var(--rule); border-radius:10px;
+          box-shadow:var(--shadow); overflow:hidden; }
+  .card a.shot { display:block; }
+  .card img { display:block; width:100%; height:auto; background:var(--surface-2); border-bottom:1px solid var(--rule); }
+  .card .body { padding:16px 18px 20px; }
+  .card h3 { font-size:1.08rem; font-weight:700; }
+  .card p { margin:6px 0 0; color:var(--ink-muted); font-size:.92rem; }
+
+  .chips { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
+  .chips li { background:var(--green-wash); color:var(--green-deep); border:1px solid var(--rule);
+              border-radius:999px; padding:4px 14px; font-size:.9rem; font-weight:500; }
+  .lang { display:grid; grid-template-columns:minmax(0,1fr); gap:20px; align-items:center; background:var(--surface); border:1px solid var(--rule);
+          border-radius:10px; padding:20px 18px; box-shadow:var(--shadow); }
+  .lang img { display:block; width:120px; height:auto; border-radius:10px; border:1px solid var(--rule); }
+
+  .prose p { margin:0 0 12px; max-width:68ch; }
+  .note { color:var(--ink-muted); font-size:.92rem; }
+
+  .links { display:flex; flex-wrap:wrap; gap:8px 20px; margin:0; padding:0; list-style:none; }
+  footer { margin-top:64px; padding:24px 0 48px; border-top:1px solid var(--rule); text-align:center; }
+  footer .disclaimer { color:var(--ink-muted); font-size:.9rem; margin:0 0 6px; }
+  footer small { color:var(--ink-faint); font-size:.82rem; }
+
+  @media (min-width:760px) {
+    body { font-size:16px; }
+    .wrap { padding:0 28px; }
+    h1 { font-size:2.5rem; }
+    .hero { grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:40px; padding-top:56px; }
+    .cards { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .card.feature { grid-column:1 / -1; }
+    .lang { grid-template-columns:minmax(0,1fr) auto; padding:24px 28px; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <div class="sub">RAKKO-LAB</div>
-  <h1>重ねて！ダメージ計算</h1>
-  <div class="sub">対戦ゲーム向け 対戦支援ツール（Android）</div>
-  <div class="badge">Google Play で配信中</div>
-  <div>
-    <a class="cta" href="https://play.google.com/store/apps/details?id=com.rakkolab.battlesupport"
-       target="_blank" rel="noopener">Google Play で入手</a>
-    <a class="cta secondary" href="./guide/">使い方ガイド</a>
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <p class="brand">RAKKO-LAB</p>
+      <h1>重ねて！ダメージ計算</h1>
+      <p class="desc">対戦ゲームの画面の上に半透明のパネルを重ねて、ダメージ計算・選出分析・対戦記録ができる補助ツールです。</p>
+      <div class="actions">
+        <a class="btn primary" href="https://play.google.com/store/apps/details?id=com.rakkolab.battlesupport" target="_blank" rel="noopener">Google Play で入手</a>
+        <a class="btn secondary" href="./guide/">使い方ガイド</a>
+      </div>
+      <p class="platform">Android 向け / Google Play で配信中</p>
+    </div>
+    <figure class="frame">
+      <video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="guide/media/poster_overlay.jpg" aria-label="ゲーム画面の上にダメージ計算パネルを重ねて表示する様子">
+        <source src="media/pv_ja.webm" type="video/webm">
+        <source src="media/pv_ja.mp4" type="video/mp4">
+        <source src="guide/media/c3_overlay.webm" type="video/webm">
+      </video>
+    </figure>
   </div>
-</header>
 
-<h2>概要</h2>
-<p>対戦ゲームをプレイしながら、画面の上に重ねてダメージ計算・選出分析・対戦記録ができる対戦支援ツールです。アプリを切り替えることなく、プレイ画面のまま素早く計算・記録できます。</p>
-<p><a href="./guide/">使い方ガイド</a>で、権限の設定からパーティ登録・選出の読み取り・ダメージ計算・対戦記録まで、実際の画面で説明しています。</p>
-<p class="note">本アプリは特定のゲームの公式アプリではありません。</p>
+  <section aria-labelledby="features">
+    <h2 id="features">主な機能</h2>
+    <p class="lead">アプリを切り替えず、プレイ画面のまま計算・確認・記録できます。</p>
+    <div class="cards">
+      <figure class="card feature">
+        <a class="shot" href="assets/overlay_calc.webp"><img src="assets/overlay_calc.webp" width="1600" height="667" loading="lazy" alt="ゲーム画面の上に半透明のダメージ計算パネルが重なって表示されている様子"></a>
+        <figcaption class="body">
+          <h3>重ねて表示</h3>
+          <p>ゲーム画面の上に半透明パネルを重ねます。アプリを切り替えずに計算・記録できます。</p>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <a class="shot" href="assets/calc.webp"><img src="assets/calc.webp" width="1600" height="667" loading="lazy" alt="ダメージ計算画面。急所・耐久特化・無振りの3パターンの結果が並んでいる"></a>
+        <figcaption class="body">
+          <h3>ダメージ計算</h3>
+          <p>タイプ相性・特性・持ち物・天候・フィールドまで反映します。急所・耐久特化・無振りの3パターンを同時に表示します。</p>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <a class="shot" href="assets/matchup6x6.webp"><img src="assets/matchup6x6.webp" width="1600" height="667" loading="lazy" alt="自分6体と相手6体の与ダメージ・被ダメージを表にした6×6の対面一覧"></a>
+        <figcaption class="body">
+          <h3>6×6 対面一覧</h3>
+          <p>相手の選出画面を読み取り、6×6 の与ダメージ／被ダメージを一覧で表示します。</p>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <a class="shot" href="assets/lead.webp"><img src="assets/lead.webp" width="1600" height="667" loading="lazy" alt="初手のおすすめと、相手の初手警戒度を示す先発おすすめ画面"></a>
+        <figcaption class="body">
+          <h3>先発おすすめ</h3>
+          <p>初手のおすすめと、相手の初手に対する警戒度を表示します。</p>
+        </figcaption>
+      </figure>
+      <figure class="card">
+        <a class="shot" href="assets/record.webp"><img src="assets/record.webp" width="1600" height="667" loading="lazy" alt="勝敗・選出・メモを入力する対戦記録の画面"></a>
+        <figcaption class="body">
+          <h3>対戦記録</h3>
+          <p>勝敗・選出・メモを残せます。記録はパーティ別の戦績にまとまります。</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
 
-<h2>主な機能</h2>
-<ul>
-  <li>画面に重ねて使えるフローティング表示</li>
-  <li>タイプ相性・特性・持ち物・天候・フィールドまで見るダメージ計算</li>
-  <li>相手の選出画面を読み取り、6×6 の与ダメージ／被ダメージを一覧表示</li>
-  <li>初手のおすすめと、残り2体の選出アシスト</li>
-  <li>自分のパーティ登録（画面の読み取り／Showdown 形式の読込・書出に対応）</li>
-  <li>勝敗・選出・メモを残せる対戦記録と、パーティ別の戦績</li>
-  <li>日本語・英語・スペイン語・フランス語・ドイツ語・イタリア語・韓国語・中国語（簡体字／繁体字）に対応</li>
-</ul>
+  <section aria-labelledby="langs">
+    <div class="lang">
+      <div>
+        <h2 id="langs">8言語に対応</h2>
+        <p class="lead">アプリ内の言語はいつでも切り替えられます。中国語は簡体字・繁体字の2表記です。</p>
+        <ul class="chips">
+          <li lang="ja">日本語</li>
+          <li lang="en">English</li>
+          <li lang="es">Español</li>
+          <li lang="fr">Français</li>
+          <li lang="de">Deutsch</li>
+          <li lang="it">Italiano</li>
+          <li lang="ko">한국어</li>
+          <li lang="zh-Hans">简体中文</li>
+          <li lang="zh-Hant">繁體中文</li>
+        </ul>
+      </div>
+      <img src="assets/language.webp" width="720" height="1493" loading="lazy" alt="言語選択画面。9つの表記が一覧で表示されている">
+    </div>
+  </section>
 
-<h2>データの取り扱い</h2>
-<p>パーティや対戦記録は端末内に保存されます。撮影した画面の画像が端末の外に送信されることはありません。</p>
-<p>より良い分析のため、<strong>匿名の対戦データ（勝敗と選出）を送信する設定があり、いつでもオフにできます</strong>。氏名・メールアドレス・アカウント情報・広告IDは収集しません。詳細は<a href="./privacy/">プライバシーポリシー</a>をご確認ください。</p>
+  <section aria-labelledby="party" class="prose">
+    <h2 id="party">パーティ登録</h2>
+    <p>自分のパーティは、画面の読み取り、または Showdown 形式の読込・書出で登録できます。</p>
+  </section>
 
-<h2>リンク</h2>
-<p class="links">
-  <a href="https://play.google.com/store/apps/details?id=com.rakkolab.battlesupport"
-     target="_blank" rel="noopener">Google Play</a>
-  <a href="./guide/">使い方ガイド</a>
-  <a href="./privacy/">プライバシーポリシー</a>
-  <a href="https://x.com/rakkolab" target="_blank" rel="noopener">X (@rakkolab)</a>
-</p>
+  <section aria-labelledby="data" class="prose">
+    <h2 id="data">データの取り扱い</h2>
+    <p>パーティや対戦記録は端末内に保存されます。撮影した画面の画像が端末の外に送信されることはありません。</p>
+    <p>より良い分析のため、<strong>匿名の対戦データ（勝敗と選出）を送信する設定があり、いつでもオフにできます</strong>。氏名・メールアドレス・アカウント情報・広告IDは収集しません。詳細は<a href="./privacy/">プライバシーポリシー</a>をご確認ください。</p>
+  </section>
 
-<footer>© RAKKO-LAB</footer>
+  <section aria-labelledby="linkh">
+    <h2 id="linkh">リンク</h2>
+    <ul class="links">
+      <li><a href="https://play.google.com/store/apps/details?id=com.rakkolab.battlesupport" target="_blank" rel="noopener">Google Play</a></li>
+      <li><a href="./guide/">使い方ガイド</a></li>
+      <li><a href="./privacy/">プライバシーポリシー</a></li>
+      <li><a href="https://x.com/rakkolab" target="_blank" rel="noopener">X (@rakkolab)</a></li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="disclaimer">本アプリは特定のゲームの公式アプリではありません。</p>
+    <small>© RAKKO-LAB</small>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var v = document.getElementById('hero-video');
+    if (v && window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      v.removeAttribute('autoplay'); v.pause(); v.controls = true;
+    }
+  })();
+</script>
 </body>
 </html>
