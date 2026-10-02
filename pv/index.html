@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ja" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>重ねて！ダメージ計算 PV (ja)</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "NotoJP";
+        src: url("assets/fonts/NotoSansJP-sub.ttf") format("truetype");
+        font-weight: 100 900;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #101512; }
+      #root {
+        position: relative; width: 100%; height: 100%; overflow: hidden;
+        font-family: "NotoJP", sans-serif; color: #e4ede7;
+      }
+      .bg {
+        position: absolute; inset: 0;
+        background: radial-gradient(ellipse at 70% 30%, #1c2e23 0%, #101512 65%);
+      }
+      .clip { position: absolute; inset: 0; }
+
+      /* caption band shared by every scene */
+      .cap { position: absolute; left: 120px; right: 120px; bottom: 84px; }
+      .cap .k { font-size: 30px; letter-spacing: 0.12em; color: #7fc095; font-weight: 700; }
+      .cap .t { margin-top: 10px; font-size: 64px; font-weight: 800; line-height: 1.25; }
+      .cap .s { margin-top: 12px; font-size: 32px; color: #9daaa2; font-weight: 500; }
+
+      .device {
+        position: absolute; border-radius: 28px; background: #050806; padding: 14px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+      }
+      .device .screen { position: relative; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; }
+      .device img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+      /* scene A: switching between apps */
+      #a-game, #a-calc { top: 130px; width: 860px; height: 484px; }
+      #a-game { left: 160px; }
+      #a-calc { left: 900px; }
+      .dummy {
+        position: absolute; inset: 0;
+        background: radial-gradient(ellipse at 60% 40%, #2b3f6b, #121a33 60%, #0a0f1f);
+      }
+      .dummy .row { position: absolute; height: 52px; border-radius: 10px; }
+      .dummy .l { left: 26px; width: 210px; background: #33468a; border: 2px solid #7f95e8; }
+      .dummy .r { right: 26px; width: 210px; background: #6b2740; border: 2px solid #e07a98; }
+      .dummy .mid { position: absolute; left: 0; right: 0; top: 200px; text-align: center; font-size: 26px; letter-spacing: 0.25em; color: #c9d3f0; opacity: 0.8; }
+      .calcapp { position: absolute; inset: 0; background: #f2f5f2; color: #1b211d; padding: 40px; }
+      .calcapp .h { font-size: 30px; font-weight: 800; }
+      .calcapp .f { margin-top: 22px; height: 52px; border-radius: 10px; background: #e4eee7; border: 2px solid #d6dfd8; }
+      .calcapp .f.w { width: 60%; }
+      .swap {
+        position: absolute; left: 0; right: 0; top: 650px; text-align: center;
+        font-size: 64px; color: #e0912f; font-weight: 800;
+      }
+
+      /* scene B: overlay footage */
+      #b-dev { left: 226px; top: 110px; width: 1468px; height: 604px; }
+      #b-video { position: absolute; left: 240px; top: 124px; width: 1440px; height: 576px; border-radius: 16px; object-fit: cover; }
+      #b-tap { position: absolute; left: 254px; top: 504px; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #e0912f; opacity: 0; }
+
+      /* scene C/D: still screenshots */
+      #c-dev, #d-dev { left: 200px; top: 80px; width: 1520px; height: 662px; }
+      .zoom { position: absolute; inset: 0; transform-origin: 50% 40%; }
+      .wipe { position: absolute; inset: 0; background: #0d1210; transform-origin: 100% 50%; }
+
+      /* scene E: end card */
+      #e-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+      #e-card .brand { font-size: 34px; letter-spacing: 0.2em; color: #7fc095; font-weight: 700; }
+      #e-card .name { margin-top: 18px; font-size: 128px; font-weight: 900; letter-spacing: 0.02em; }
+      #e-card .sub { margin-top: 22px; font-size: 40px; color: #9daaa2; font-weight: 500; }
+      #e-card .play {
+        margin-top: 56px; padding: 22px 56px; border-radius: 18px; background: #2d5f3f;
+        border: 2px solid #7fc095; font-size: 46px; font-weight: 800; color: #fff;
+      }
+      #e-card .note { position: absolute; bottom: 52px; left: 0; right: 0; font-size: 24px; color: #6e7c74; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="15" data-width="1920" data-height="1080">
+      <div class="bg"></div>
+
+      <!-- A 0-3.2: switching apps mid-battle is a chore -->
+      <section id="scene-a" class="clip" data-start="0" data-duration="3.2" data-track-index="1">
+        <div id="a-game" class="device"><div class="screen">
+          <div class="dummy">
+            <div class="row l" style="top: 40px"></div><div class="row l" style="top: 110px"></div>
+            <div class="row l" style="top: 180px"></div><div class="row l" style="top: 250px"></div>
+            <div class="row r" style="top: 40px"></div><div class="row r" style="top: 110px"></div>
+            <div class="row r" style="top: 180px"></div><div class="row r" style="top: 250px"></div>
+            <div class="mid">BATTLE</div>
+          </div>
+        </div></div>
+        <div id="a-calc" class="device"><div class="screen">
+          <div class="calcapp">
+            <div class="h">計算アプリ</div>
+            <div class="f"></div><div class="f w"></div><div class="f"></div><div class="f w"></div>
+          </div>
+        </div></div>
+        <div id="a-swap" class="swap">⇄</div>
+        <div class="cap" id="a-cap">
+          <div class="t"><span style="display:block">対戦中に、計算アプリを</span><span style="display:block">行き来するのは手間。</span></div>
+        </div>
+      </section>
+
+      <!-- B 3.2-7.2: overlay on top of the play screen -->
+      <section id="scene-b" class="clip" data-start="3.2" data-duration="4" data-track-index="1">
+        <div id="b-dev" class="device"></div>
+        <div class="cap" id="b-cap">
+          <div class="k">重ねて表示</div>
+          <div class="t">画面に重ねて、そのまま計算。</div>
+        </div>
+      </section>
+      <video id="b-video" src="assets/overlay_pop.mp4" muted playsinline
+        data-start="3.2" data-duration="4" data-media-start="0.5" data-track-index="2"></video>
+      <div id="b-tap"></div>
+
+      <!-- C 7.2-10.2: damage calc -->
+      <section id="scene-c" class="clip" data-start="7.2" data-duration="3" data-track-index="1">
+        <div id="c-dev" class="device"><div class="screen">
+          <div class="zoom" id="c-zoom" data-layout-allow-overflow><img src="assets/calc.webp" alt="" /></div>
+        </div></div>
+        <div class="cap" id="c-cap">
+          <div class="k">ダメージ計算</div>
+          <div class="t">特性・持ち物・天候まで反映。</div>
+          <div class="s">急所・耐久特化・無振りの3パターンを同時に表示</div>
+        </div>
+      </section>
+
+      <!-- D 10.2-12.8: 6x6 matchup table -->
+      <section id="scene-d" class="clip" data-start="10.2" data-duration="2.6" data-track-index="1">
+        <div id="d-dev" class="device"><div class="screen">
+          <img src="assets/matchup6x6.webp" alt="" />
+          <div class="wipe" id="d-wipe"></div>
+        </div></div>
+        <div class="cap" id="d-cap">
+          <div class="k">6×6 対面一覧</div>
+          <div class="t">相手の6体との相性を、一覧で。</div>
+        </div>
+      </section>
+
+      <!-- E 12.8-15: end card -->
+      <section id="e-card" class="clip" data-start="12.8" data-duration="2.2" data-track-index="1">
+        <div class="brand" id="e-brand">RAKKO-LAB</div>
+        <div class="name" id="e-name">重ねて！ダメージ計算</div>
+        <div class="sub" id="e-sub">Android 向け 対戦の補助・記録ツール</div>
+        <div class="play" id="e-play">Google Play で配信中</div>
+        <div class="note">本アプリは特定のゲームの公式アプリではありません</div>
+      </section>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const E = "power3.out";
+
+      // A: the two apps trade places twice, then the caption lands
+      tl.fromTo("#a-game", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 0.1);
+      tl.fromTo("#a-calc", { opacity: 0, y: 30 }, { opacity: 0.45, y: 0, duration: 0.5, ease: E }, 0.25);
+      tl.fromTo("#a-swap", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.7);
+      tl.to("#a-game", { opacity: 0.45, scale: 0.94, duration: 0.35, ease: "power2.inOut" }, 0.9);
+      tl.to("#a-calc", { opacity: 1, scale: 1.04, duration: 0.35, ease: "power2.inOut" }, 0.9);
+      tl.to("#a-game", { opacity: 1, scale: 1, duration: 0.35, ease: "power2.inOut" }, 1.5);
+      tl.to("#a-calc", { opacity: 0.45, scale: 0.94, duration: 0.35, ease: "power2.inOut" }, 1.5);
+      tl.fromTo("#a-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 0.5);
+      tl.to(["#a-game", "#a-calc", "#a-swap", "#a-cap"], { opacity: 0, duration: 0.3 }, 2.9);
+
+      // B: footage frame and caption
+      tl.fromTo("#b-dev", { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.4, ease: E }, 3.2);
+      tl.fromTo("#b-video", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3.25);
+      tl.fromTo("#b-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 3.5);
+      tl.fromTo("#b-tap", { opacity: 0.9, scale: 0.6 }, { opacity: 0, scale: 1.6, duration: 0.6, ease: "power2.out", immediateRender: false }, 4.2);
+      tl.to(["#b-dev", "#b-video", "#b-cap"], { opacity: 0, duration: 0.3 }, 6.9);
+
+      // C: slow push toward the result column
+      tl.fromTo("#c-dev", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 7.2);
+      tl.fromTo("#c-zoom", { scale: 1 }, { scale: 1.32, duration: 2.6, ease: "power1.inOut" }, 7.4);
+      tl.fromTo("#c-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 7.5);
+      tl.to(["#c-dev", "#c-cap"], { opacity: 0, duration: 0.3 }, 9.9);
+
+      // D: the table is uncovered left to right
+      tl.fromTo("#d-dev", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 10.2);
+      tl.fromTo("#d-wipe", { scaleX: 1 }, { scaleX: 0, duration: 1.0, ease: "power2.inOut" }, 10.3);
+      tl.fromTo("#d-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 10.5);
+      tl.to(["#d-dev", "#d-cap"], { opacity: 0, duration: 0.3 }, 12.5);
+
+      // E: end card
+      tl.fromTo("#e-brand", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 12.85);
+      tl.fromTo("#e-name", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 12.95);
+      tl.fromTo("#e-sub", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 13.2);
+      tl.fromTo("#e-play", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 13.4);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

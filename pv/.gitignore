@@ -1,0 +1,7 @@
+node_modules/
+assets/fonts/NotoSansJP.ttf
+renders/
+.thumbnails/
+CLAUDE.md
+AGENTS.md
+snapshots/
