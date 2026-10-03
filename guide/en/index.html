@@ -267,7 +267,7 @@
       <div class="panel" data-deck>
         <article class="step">
           <div class="stage">
-            <div class="phone"><div class="screen"><video src="../media/c1_permission.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="phone"><div class="screen"><video src="../media/c1_permission.webm" autoplay muted loop playsinline poster="../media/c1_poster.jpg"></video></div></div>
             <div class="kind mono">Recording: permission screen → settings → done</div>
           </div>
           <div class="notes">
@@ -360,7 +360,7 @@
       <div class="panel" data-deck>
         <article class="step wide">
           <div class="stage">
-            <div class="phone wide"><div class="screen"><video src="../media/c2_launch.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="phone wide"><div class="screen"><video src="../media/c2_launch.webm" autoplay muted loop playsinline poster="../media/c2_poster.jpg"></video></div></div>
             <div class="kind mono">Recording: opening the panel</div>
           </div>
           <div class="notes">
@@ -397,7 +397,7 @@
         </article>
         <article class="step wide">
           <div class="stage">
-            <div class="phone wide"><div class="screen"><video src="../media/c4_fix.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="phone wide"><div class="screen"><video src="../media/c4_fix.webm" autoplay muted loop playsinline poster="../media/c4_poster.jpg"></video></div></div>
             <div class="kind mono">Recording: six read, then correcting the fifth</div>
           </div>
           <div class="notes">
@@ -420,7 +420,7 @@
       <div class="panel" data-deck>
         <article class="step wide">
           <div class="stage">
-            <div class="phone wide"><div class="screen"><video src="../media/c5_calc.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="phone wide"><div class="screen"><video src="../media/c5_calc.webm" autoplay muted loop playsinline poster="../media/c5_poster.jpg"></video></div></div>
             <div class="kind mono">Recording: calculating over the game</div>
           </div>
           <div class="notes">
@@ -552,7 +552,7 @@
       <div class="panel" data-deck>
         <article class="step wide">
           <div class="stage">
-            <div class="phone wide"><div class="screen"><video src="../media/c6_record.webm" autoplay muted loop playsinline></video></div></div>
+            <div class="phone wide"><div class="screen"><video src="../media/c6_record.webm" autoplay muted loop playsinline poster="../media/c6_poster.jpg"></video></div></div>
             <div class="kind mono">Recording: from "Log this battle" to the record screen</div>
           </div>
           <div class="notes">
@@ -771,6 +771,54 @@
       paint();
     }
   });
+
+  // Videos play only while they are on screen, and start from the top when they come into view
+  // (2026-10-03). Before this every clip autoplayed at load: six downloads at once, and a clip the
+  // reader scrolls to was usually half-way through. The observer also sees the deck's horizontal
+  // clipping, so a step that is swiped away stops too. Without JS (or without IntersectionObserver)
+  // the markup's own autoplay still applies, so nothing gets worse. Reduced motion: no autoplay,
+  // the reader gets controls instead.
+  var vids = Array.prototype.slice.call(document.querySelectorAll("video"));
+  if (REDUCED) {
+    vids.forEach(function (v) { v.removeAttribute("autoplay"); v.pause(); v.controls = true; });
+  } else if ("IntersectionObserver" in window) {
+    var vio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var v = e.target;
+        if (e.isIntersecting) {
+          if (v.paused) { try { v.currentTime = 0; } catch (err) {} var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+        } else if (!v.paused) {
+          v.pause();
+        }
+      });
+    }, { threshold: 0.4 });
+    vids.forEach(function (v) {
+      v.removeAttribute("autoplay");
+      v.preload = "metadata";
+      v.pause();
+      vio.observe(v);
+    });
+
+    // Panels ease in once as they reach the viewport. Small on purpose (12px, 0.5s): it marks
+    // "a new step starts here" without making the reader wait. Skipped entirely for reduced motion.
+    var rs = document.createElement("style");
+    rs.textContent =
+      ".js .reveal { opacity:0; transform:translateY(12px); transition:opacity .5s ease, transform .5s ease; }" +
+      ".js .reveal.in { opacity:1; transform:none; }";
+    document.head.appendChild(rs);
+    var rio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add("in");
+        rio.unobserve(e.target);
+      });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    Array.prototype.forEach.call(document.querySelectorAll(".panel, .hero, .paths"), function (el) {
+      if (el.getBoundingClientRect().top < window.innerHeight) return; // already on screen at load
+      el.classList.add("reveal");
+      rio.observe(el);
+    });
+  }
 
   var links = Array.prototype.slice.call(document.querySelectorAll("#toc a"));
   if ("IntersectionObserver" in window) {
