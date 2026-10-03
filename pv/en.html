@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Kasanete! Damage Calc PV (en)</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "NotoJP";
+        src: url("assets/fonts/NotoSansJP-sub.ttf") format("truetype");
+        font-weight: 100 900;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #101512; }
+      #root {
+        position: relative; width: 100%; height: 100%; overflow: hidden;
+        font-family: "NotoJP", sans-serif; color: #e4ede7;
+      }
+      .bg {
+        position: absolute; inset: 0;
+        background: radial-gradient(ellipse at 70% 30%, #1c2e23 0%, #101512 65%);
+      }
+      .clip { position: absolute; inset: 0; }
+
+      /* caption band shared by every scene */
+      .cap { position: absolute; left: 120px; right: 120px; bottom: 84px; }
+      .cap .k { font-size: 30px; letter-spacing: 0.12em; color: #7fc095; font-weight: 700; }
+      .cap .t { margin-top: 10px; font-size: 64px; font-weight: 800; line-height: 1.25; }
+      .cap .s { margin-top: 12px; font-size: 32px; color: #9daaa2; font-weight: 500; }
+
+      .device {
+        position: absolute; border-radius: 28px; background: #050806; padding: 14px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+      }
+      .device .screen { position: relative; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; }
+      .device img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+      /* real footage (1536x720) shares one frame: B, B2, C, D */
+      .frame { left: 226px; top: 56px; width: 1468px; height: 703px; }
+      .footage { position: absolute; left: 240px; top: 70px; width: 1440px; height: 675px; border-radius: 16px; object-fit: cover; }
+
+      /* scene A: the game, and a separate calc app on another screen */
+      #a-game { left: 110px; top: 110px; width: 1128px; height: 544px; }
+      #a-phone { left: 1340px; top: 64px; width: 380px; height: 748px; border-radius: 44px; padding: 14px; }
+      #a-phone .screen { border-radius: 32px; background: #f3f6fb; }
+      .swap {
+        position: absolute; left: 1238px; top: 330px; width: 104px; text-align: center;
+        font-size: 64px; color: #e0912f; font-weight: 800;
+      }
+
+      /* a generic web-style damage calc, portrait */
+      .wc { position: absolute; left: 0; right: 0; top: 0; color: #1d2430; font-size: 15px; }
+      .wc .bar { height: 30px; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-size: 12px; color: #222; }
+      .wc .res { background: #fff; padding: 10px 14px 12px; border-bottom: 1px solid #dfe5ee; }
+      .wc .mv { display: flex; align-items: center; gap: 8px; }
+      .wc .chip { padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: 14px; }
+      .wc .chip.m { background: #f1e6fb; color: #7a3fb0; border: 1px solid #c9a6ea; }
+      .wc .pw { font-size: 12px; color: #6b7480; }
+      .wc .x2 { margin-left: auto; color: #d24343; font-weight: 800; }
+      .wc .hp { margin-top: 10px; height: 14px; border-radius: 4px; background: #e6eaf0; position: relative; overflow: hidden; }
+      .wc .hp i { position: absolute; top: 0; bottom: 0; }
+      .wc .dmg { margin-top: 8px; display: flex; justify-content: space-between; font-size: 13px; }
+      .wc .dmg b { color: #d24343; }
+      .wc .card { margin: 12px 12px 0; background: #fff; border-radius: 14px; border: 2px solid #f4c4cf; padding: 12px; }
+      .wc .card.d { border-color: #b9d4f1; }
+      .wc .tabs { display: flex; gap: 6px; }
+      .wc .tab { padding: 3px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; border: 1px solid #f0a6b6; color: #d2556e; }
+      .wc .tab.on { background: #f05f7d; color: #fff; border-color: #f05f7d; }
+      .wc .card.d .tab { border-color: #9cc2ea; color: #3e7cc0; }
+      .wc .card.d .tab.on { background: #4b8fd6; color: #fff; border-color: #4b8fd6; }
+      .wc .name { margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+      .wc .ava { width: 38px; height: 38px; border-radius: 50%; background: #e9eef6; border: 2px solid #d3dbe7; flex: none; }
+      .wc .ava img { width: 100%; height: 100%; object-fit: contain; }
+      .wc .fld { flex: 1; border: 1px solid #c9d3e0; border-radius: 8px; padding: 6px 10px; background: #f8fafd; font-weight: 600; }
+      .wc .row { margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+      .wc .row .fld { padding: 4px 8px; font-weight: 500; }
+      .wc .stat { margin-top: 10px; border: 1px solid #e3e8f0; border-radius: 10px; padding: 8px 10px; }
+      .wc .stat .h { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: #d2556e; }
+      .wc .card.d .stat .h { color: #3e7cc0; }
+      .wc .num { border: 1px solid #c9d3e0; border-radius: 8px; padding: 2px 12px; font-weight: 700; color: #1d2430; }
+      .wc .sl { margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+      .wc .track { flex: 1; height: 4px; background: #d3dbe7; border-radius: 2px; position: relative; }
+      .wc .track i { position: absolute; top: -6px; width: 16px; height: 16px; border-radius: 50%; background: #3e7cc0; }
+      .wc .pm { display: flex; }
+      .wc .pm span { width: 26px; height: 24px; display: flex; align-items: center; justify-content: center; background: #3e7cc0; color: #fff; font-weight: 700; }
+      .wc .pm em { width: 34px; height: 24px; display: flex; align-items: center; justify-content: center; border-top: 1px solid #c9d3e0; border-bottom: 1px solid #c9d3e0; font-style: normal; font-weight: 700; }
+      .wc .fold { margin-top: 8px; border: 1px solid #e3e8f0; border-radius: 10px; padding: 7px 10px; font-size: 13px; font-weight: 700; color: #d2556e; }
+      .wc .card.d .fold { color: #3e7cc0; }
+      .wc .fold small { color: #8a94a3; font-weight: 500; }
+
+      #b-tap { position: absolute; left: 320px; top: 302px; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #e0912f; opacity: 0; }
+      .wipe { position: absolute; inset: 0; background: #0d1210; transform-origin: 100% 50%; }
+
+      /* scene E: end card */
+      #e-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+      #e-card .brand { font-size: 34px; letter-spacing: 0.2em; color: #7fc095; font-weight: 700; }
+      #e-card .name { margin-top: 18px; font-size: 128px; font-weight: 900; letter-spacing: 0.02em; }
+      #e-card .sub { margin-top: 22px; font-size: 40px; color: #9daaa2; font-weight: 500; }
+      #e-card .play {
+        margin-top: 56px; padding: 22px 56px; border-radius: 18px; background: #2d5f3f;
+        border: 2px solid #7fc095; font-size: 46px; font-weight: 800; color: #fff;
+      }
+      #e-card .note { position: absolute; bottom: 52px; left: 0; right: 0; font-size: 24px; color: #6e7c74; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="16.5" data-width="1920" data-height="1080">
+      <div class="bg"></div>
+
+      <!-- A 0-3.0: the game on one screen, a separate calc app on another -->
+      <section id="scene-a" class="clip" data-start="0" data-duration="3" data-track-index="1">
+        <div id="a-game" class="device"><div class="screen"><img src="assets/real_game.webp" alt="" /></div></div>
+        <div id="a-phone" class="device"><div class="screen">
+          <div class="wc" id="a-wc" data-layout-allow-overflow>
+            <div class="bar"><span>4:38</span><span>● ● ▮</span></div>
+            <div class="res">
+              <div class="mv"><span class="chip m">Outrage</span><span class="pw">Power 120</span><span class="x2">×2</span></div>
+              <div class="hp"><i style="left:0;width:25%;background:#7cc576"></i><i style="left:25%;width:12%;background:#f1c40f"></i></div>
+              <div class="dmg"><span>Damage 108–128 (63.5%–75.3%)</span><b>2HKO</b></div>
+            </div>
+            <div class="card">
+              <div class="tabs"><span class="tab on">Attack</span><span class="tab">Defense</span><span class="tab">Field</span></div>
+              <div class="name"><div class="ava"><img src="assets/sprite_atk.webp" alt="" /></div><div class="fld">Garchomp</div></div>
+              <div class="row">Ability<div class="fld">Rough Skin</div>Item<div class="fld">None</div></div>
+              <div class="row">Move<div class="fld">Outrage</div></div>
+              <div class="stat">
+                <div class="h">Atk<span class="num">182</span></div>
+                <div class="sl">Pts<div class="track"><i style="left:calc(100% - 16px)"></i></div><div class="pm"><span>−</span><em>32</em><span>＋</span></div></div>
+                <div class="sl">Nature<div class="pm"><span>−</span><em>—</em><span>＋</span></div>Stage<div class="pm"><span>−</span><em>−1</em><span>＋</span></div></div>
+              </div>
+              <div class="fold">▶ Sp. Atk</div>
+              <div class="fold">▶ Speed <small>(Gyro Ball etc.)</small></div>
+            </div>
+            <div class="card d">
+              <div class="tabs"><span class="tab">Attack</span><span class="tab on">Defense</span><span class="tab">Field</span></div>
+              <div class="name"><div class="ava"><img src="assets/sprite_def.webp" alt="" /></div><div class="fld">Mega Salamence</div></div>
+              <div class="row">Ability<div class="fld">Aerilate</div>Item<div class="fld">None</div></div>
+              <div class="stat">
+                <div class="h">HP<span class="num">170</span></div>
+                <div class="sl">Pts<div class="track"><i style="left:0"></i></div><div class="pm"><span>−</span><em>0</em><span>＋</span></div></div>
+              </div>
+              <div class="stat">
+                <div class="h">Def<span class="num">153</span></div>
+                <div class="sl">Pts<div class="track"><i style="left:8%"></i></div><div class="pm"><span>−</span><em>3</em><span>＋</span></div></div>
+                <div class="sl">Nature<div class="pm"><span>−</span><em>—</em><span>＋</span></div>Stage<div class="pm"><span>−</span><em>±0</em><span>＋</span></div></div>
+              </div>
+              <div class="fold">▶ Status &amp; support <small>(screens etc.)</small></div>
+            </div>
+          </div>
+        </div></div>
+        <div id="a-swap" class="swap">⇄</div>
+        <div class="cap" id="a-cap">
+          <div class="t"><span style="display:block">Switching to a damage calc app</span><span style="display:block">mid-battle takes you out of the game.</span></div>
+        </div>
+      </section>
+
+      <!-- B 3.0-6.0: the overlay opens on top of the real selection screen -->
+      <section id="scene-b" class="clip" data-start="3" data-duration="3" data-track-index="1">
+        <div id="b-dev" class="device frame"></div>
+        <div class="cap" id="b-cap">
+          <div class="k">OVERLAY</div>
+          <div class="t">Calculate right on top of the game.</div>
+        </div>
+      </section>
+      <video id="b-video" class="footage" src="assets/real_overlay.mp4" muted playsinline
+        data-start="3" data-duration="3" data-media-start="0" data-track-index="2"></video>
+      <div id="b-tap"></div>
+
+      <!-- B2 6.0-8.5: the opponent's six, read from one capture -->
+      <section id="scene-r" class="clip" data-start="6" data-duration="2.5" data-track-index="1">
+        <div id="r-dev" class="device frame"></div>
+        <div class="cap" id="r-cap">
+          <div class="k">SCREEN READING</div>
+          <div class="t">Capture once to read the opponent's six.</div>
+        </div>
+      </section>
+      <video id="r-video" class="footage" src="assets/real_read.mp4" muted playsinline
+        data-start="6" data-duration="2.5" data-media-start="0.1" data-track-index="2"></video>
+
+      <!-- C 8.5-11.9: damage calc, live -->
+      <section id="scene-c" class="clip" data-start="8.5" data-duration="3.4" data-track-index="1">
+        <div id="c-dev" class="device frame"></div>
+        <div class="cap" id="c-cap">
+          <div class="k">DAMAGE CALC</div>
+          <div class="t">Screens, terrain, stat stages and more.</div>
+          <div class="s">Crit, max-defense and no-investment results side by side</div>
+        </div>
+      </section>
+      <video id="c-video" class="footage" src="assets/real_calc.mp4" muted playsinline
+        data-start="8.5" data-duration="3.4" data-media-start="0.2" data-track-index="2"></video>
+
+      <!-- D 11.9-14.3: 6x6 matchup table -->
+      <section id="scene-d" class="clip" data-start="11.9" data-duration="2.4" data-track-index="1">
+        <div id="d-dev" class="device frame"><div class="screen">
+          <img src="assets/real_matchup.webp" alt="" />
+          <div class="wipe" id="d-wipe"></div>
+        </div></div>
+        <div class="cap" id="d-cap">
+          <div class="k">6×6 MATCHUPS</div>
+          <div class="t">Every matchup against their six, at a glance.</div>
+        </div>
+      </section>
+
+      <!-- E 14.3-16.5: end card -->
+      <section id="e-card" class="clip" data-start="14.3" data-duration="2.2" data-track-index="1">
+        <div class="brand" id="e-brand">RAKKO-LAB</div>
+        <div class="name" id="e-name">Kasanete! Damage Calc</div>
+        <div class="sub" id="e-sub">A battle helper and log for Android</div>
+        <div class="play" id="e-play">Available on Google Play</div>
+        <div class="note">This app is not an official app of any game.</div>
+      </section>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const E = "power3.out";
+
+      // A: attention goes game -> calc app (scrolling to find the field) -> back to the game
+      tl.fromTo("#a-game", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 0.1);
+      tl.fromTo("#a-phone", { opacity: 0, y: 30 }, { opacity: 0.5, y: 0, duration: 0.5, ease: E }, 0.25);
+      tl.fromTo("#a-swap", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.7);
+      tl.to("#a-game", { opacity: 0.45, scale: 0.96, duration: 0.35, ease: "power2.inOut" }, 0.9);
+      tl.to("#a-phone", { opacity: 1, scale: 1.03, duration: 0.35, ease: "power2.inOut" }, 0.9);
+      tl.fromTo("#a-wc", { y: 0 }, { y: -170, duration: 0.8, ease: "power2.inOut" }, 1.1);
+      tl.to("#a-game", { opacity: 1, scale: 1, duration: 0.35, ease: "power2.inOut" }, 2.0);
+      tl.to("#a-phone", { opacity: 0.5, scale: 1, duration: 0.35, ease: "power2.inOut" }, 2.0);
+      tl.fromTo("#a-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 0.5);
+      tl.to(["#a-game", "#a-phone", "#a-swap", "#a-cap"], { opacity: 0, duration: 0.3 }, 2.7);
+
+      // B: the bubble is tapped and the overlay opens over the game
+      tl.fromTo(["#b-dev", "#b-video"], { opacity: 0 }, { opacity: 1, duration: 0.35, ease: E }, 3.0);
+      tl.fromTo("#b-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 3.25);
+      tl.fromTo("#b-tap", { opacity: 0.9, scale: 0.6 }, { opacity: 0, scale: 1.6, duration: 0.6, ease: "power2.out", immediateRender: false }, 3.55);
+      tl.to("#b-cap", { opacity: 0, duration: 0.25 }, 5.75);
+
+      // B2: same frame, next step
+      tl.fromTo("#r-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 6.1);
+      tl.to("#r-cap", { opacity: 0, duration: 0.25 }, 8.25);
+
+      // C: the calc as it is used; no camera move
+      tl.fromTo("#c-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 8.6);
+      tl.to(["#c-dev", "#c-video", "#c-cap"], { opacity: 0, duration: 0.3 }, 11.6);
+
+      // D: the table is uncovered left to right
+      tl.fromTo("#d-dev", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 11.9);
+      tl.fromTo("#d-wipe", { scaleX: 1 }, { scaleX: 0, duration: 1.0, ease: "power2.inOut" }, 12.0);
+      tl.fromTo("#d-cap", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 12.2);
+      tl.to(["#d-dev", "#d-cap"], { opacity: 0, duration: 0.3 }, 14.0);
+
+      // E: end card
+      tl.fromTo("#e-brand", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 14.35);
+      tl.fromTo("#e-name", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 14.45);
+      tl.fromTo("#e-sub", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 14.7);
+      tl.fromTo("#e-play", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 14.9);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
