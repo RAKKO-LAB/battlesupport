@@ -11,6 +11,8 @@
 | 1 | 素材撮影（エミュレータ+adb）→ `assets/` | 完了 |
 | 2 | トップ刷新（動画/Playボタン/機能カード/8言語/プライバシー/非公式注記/OGP） | 完了 |
 | 3 | 15秒PV（HyperFrames）→ `media/`、トップに埋め込み | 完了（日本語版・英語版。英語版は新設の英語トップ `/en/` に。手順は `media/README.md`） |
+| 5 | 英語ページのアプリ画面を英語表示で撮り直し（トップ・PV） | 完了 2026-10-03（`assets/en/`・`pv/assets/en_*`） |
+| 6 | **英語ガイド `/guide/en/` の撮り直し**（動画6本＋静止画8枚・●座標の合わせ込み） | 未（Ryo「後回し」2026-10-04） |
 | 4 | ガイドの演出強化 | 完了（2026-10-03: 動画ポスター、画面内の動画だけ頭から再生、パネルの控えめなフェードイン。日英とも同じ処理） |
 
 ## 素材の所在
@@ -27,5 +29,5 @@
 
 ## 道具
 - HyperFrames: `~/.claude/skills/hyperframes*`（`npx hyperframes skills update` で導入済み、CLI は `npx hyperframes`）
-- Sonnet 作業者: `~/.claude/agents/sonnet-worker.md`（model: sonnet。次セッションから `subagent_type: sonnet-worker`。
-  導入セッションでは general-purpose + model: sonnet で代用し、claude-sonnet-5-5 で動くことを確認済み）
+- Sonnet 作業者: `~/.claude/agents/sonnet-worker.md`（`subagent_type: sonnet-worker`・claude-sonnet-5-5 で動くことを確認済み）
+- 英語の正式名は **Overlay Damage Calculator**。英語ページに載せるアプリ画面は**英語表示**で撮る（Ryo 2026-10-03）
